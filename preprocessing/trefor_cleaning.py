@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from util.util import read_csv, write_csv
 
 # Loading the original data into a pandas dataframe
-file_path = "../data/raw/trefor_raw.csv"
+file_path = "data/raw/trefor_raw.csv"
 consumption = read_csv(file_path)
 
 # Dropping date and time, as this is not needed when cleaning
@@ -49,4 +49,5 @@ plt.savefig("average.pdf")
 # plt.show()
 
 # Return the cleaned data into another csv
-write_csv(cleaned, "../data/interim/trefor_cleaned.csv")
+output_path = "data/interim/trefor_cleaned.csv"
+write_csv(cleaned, output_path)

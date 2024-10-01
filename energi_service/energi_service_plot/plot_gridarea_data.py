@@ -95,7 +95,7 @@ def plot_consumption_data(file_path: str, year: int, month: int) -> None:
 
 
 plot_consumption_data(
-    "../energi_service_data/ConsumptionPerGridArea.csv",
+    "data/external/ConsumptionPerGridArea.csv",
     year=2023,
     month=5,
 )
