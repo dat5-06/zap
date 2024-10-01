@@ -77,7 +77,9 @@ def get_grid_area_consumption(
     )
 
     grid_area_consumption_df = pd.DataFrame(grid_area_consumption["records"])
-    grid_area_consumption_df = grid_area_consumption_df.drop(columns=["HourUTC"])
+    grid_area_consumption_df = grid_area_consumption_df.drop(
+        columns=["HourUTC", "ResidualConsumption"]
+    )
     save_dataframe_to_csv(
         grid_area_consumption_df, Path(output_dir) / "ConsumptionPerGridArea.csv"
     )
