@@ -1,9 +1,10 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from util.util import read_csv, write_csv
 
-# Loading the orignal data into a pandas dataframe
-file_path = "trefor.csv"
-consumption = pd.read_csv(file_path, sep=";", decimal=",")
+# Loading the original data into a pandas dataframe
+file_path = "../data/raw/trefor_raw.csv"
+consumption = read_csv(file_path)
 
 # Dropping date and time, as this is not needed when cleaning
 df_original = consumption.drop(columns=["Dato", "Time"])
@@ -27,10 +28,10 @@ cleaned = cleaned.loc[:, (cleaned.max(axis=0) > 2)]
 cleaned = cleaned.loc[:, (cleaned.mean(axis=0) > 0.1)]
 
 # Reads the date and time before transfering to csv file
-cleaned = pd.concat([consumption["Time"], cleaned], axis=1)
+cleaned = pd.concat([consumption[["Dato", "Time"]], cleaned], axis=1)
 
 # get mean consumption per hour for each household
-grouped = cleaned.groupby("Time").mean()
+grouped = cleaned.drop(["Dato"], axis=1).groupby("Time").mean()
 
 # take mean of all households
 grouped["mean"] = grouped.to_numpy().mean(axis=1)
@@ -46,3 +47,6 @@ grouped["mean"].plot(
 )
 plt.savefig("average.pdf")
 # plt.show()
+
+# Return the cleaned data into another csv
+write_csv(cleaned, "../data/interim/trefor_cleaned.csv")

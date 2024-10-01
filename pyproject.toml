@@ -18,4 +18,4 @@ lint.select = [
   "NPY",
 ]
 
-lint.ignore = ["D100", "D203", "D211", "D213", "COM812"]
+lint.ignore = ["D100", "D203", "D211", "D213", "COM812", "ANN101"]
