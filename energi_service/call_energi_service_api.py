@@ -9,6 +9,7 @@ def call_energi_service_api(
     filter_area: str,
     sort: str,
     connected_area: str = None,
+    grid_company: str = None,
 ) -> dict:
     """Call the Energi Service API and return the response in JSON format.
 
@@ -22,12 +23,13 @@ def call_energi_service_api(
         "filter": filter_area,
         "sort": sort,
         "connected_area": connected_area,
+        "GridCompany": grid_company,
     }
 
     # Construct the URL with the parameters
-    url = f"{base_url}?{'&'.join([f'{key}={value}'
-    for key, value in params.items()
-    if value is not None])}"
+    url = f"{base_url}?" + "&".join(
+        f"{key}={value}" for key, value in params.items() if value is not None
+    )
 
     response = requests.get(url, timeout=10)
 
