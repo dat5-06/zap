@@ -1,16 +1,6 @@
 import pandas as pd
-from pathlib import Path
-from call_energi_service_api import call_energi_service_api
-
-
-def create_output_directory(directory: str) -> None:
-    """Create a directory if it does not exist."""
-    Path(directory).mkdir(parents=True, exist_ok=True)
-
-
-def save_dataframe_to_csv(df: pd.DataFrame, filepath: str) -> None:
-    """Save a DataFrame to a CSV file."""
-    df.to_csv(filepath, index=False)
+from energi_service.call_energi_service_api import call_energi_service_api
+from util.util import write_csv
 
 
 def get_consumption_data(
@@ -35,7 +25,7 @@ def get_consumption_data(
 
     consumption_df = pd.DataFrame(consumption_data["records"])
     consumption_df = consumption_df.drop(columns=["HourUTC", "PriceArea", "Updated"])
-    save_dataframe_to_csv(consumption_df, Path(output_dir) / "ConsumptionDK1.csv")
+    write_csv(consumption_df, output_dir + "ConsumptionDK1.csv")
 
 
 def get_forecast_data(
@@ -56,10 +46,8 @@ def get_forecast_data(
     forecast_df = forecast_df.drop(
         columns=["HourUTC", "TimestampUTC", "TimestampDK", "PriceArea"]
     )
-    output_file = (
-        Path(output_dir) / f"ForeCast1hour_{forecast_type.replace(' ', '_')}.csv"
-    )
-    save_dataframe_to_csv(forecast_df, output_file)
+    output_file = output_dir + f"ForeCast1hour_{forecast_type.replace(' ', '_')}.csv"
+    write_csv(forecast_df, output_file)
 
 
 def get_grid_area_consumption(
@@ -80,15 +68,12 @@ def get_grid_area_consumption(
     grid_area_consumption_df = grid_area_consumption_df.drop(
         columns=["HourUTC", "ResidualConsumption"]
     )
-    save_dataframe_to_csv(
-        grid_area_consumption_df, Path(output_dir) / "ConsumptionPerGridArea.csv"
-    )
+    write_csv(grid_area_consumption_df, output_dir + "ConsumptionPerGridArea.csv")
 
 
 def get_data_energi_service() -> None:
     """Get data from the API and save it in CSV format."""
-    output_dir = "energi_service_data"
-    create_output_directory(output_dir)
+    output_dir = "data/external/"
 
     start_date = "2022-01-01T00:00"
     end_date = "2023-12-31T00:00"

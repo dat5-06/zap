@@ -1,10 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-
-
-def read_csv(path: str) -> pd.DataFrame:
-    """Read a CSV file and return a DataFrame."""
-    return pd.read_csv(path)
+from util.util import read_csv
 
 
 def plot_consumption_data(file_path: str, year: int, month: int) -> None:
@@ -70,7 +66,7 @@ def plot_consumption_data(file_path: str, year: int, month: int) -> None:
 
 
 plot_consumption_data(
-    "../energi_service_data/ConsumptionDK1.csv",
+    "data/external/ConsumptionDK1.csv",
     year=2023,
     month=5,
 )

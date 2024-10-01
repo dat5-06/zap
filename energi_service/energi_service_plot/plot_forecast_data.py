@@ -67,6 +67,4 @@ def plot_forecast_data(file_path: str, year: int, month: int) -> None:
     plt.savefig(f"forecast_plot_{year}_{month}.pdf")
 
 
-plot_forecast_data(
-    "../energi_service_data/ForeCast1hour_Onshore_Wind.csv", year=2023, month=5
-)
+plot_forecast_data("data/external/ForeCast1hour_Onshore_Wind.csv", year=2023, month=5)
