@@ -1,6 +1,6 @@
 import pandas as pd
 from core.fetch.eds.call_energi_service_api import call_energi_service_api
-from core.util.util import write_csv
+from core.util.io import write_csv
 
 
 def get_consumption_data(
@@ -46,8 +46,9 @@ def get_forecast_data(
     forecast_df = forecast_df.drop(
         columns=["HourUTC", "TimestampUTC", "TimestampDK", "PriceArea"]
     )
-    output_file = output_dir + f"ForeCast1hour_{forecast_type.replace(' ', '_')}.csv"
-    write_csv(forecast_df, output_file)
+    write_csv(
+        forecast_df, output_dir + f"ForeCast1hour_{forecast_type.replace(' ', '_')}.csv"
+    )
 
 
 def get_grid_area_consumption(

@@ -1,9 +1,12 @@
 from pathlib import Path
+from matplotlib import pyplot as plt
 import pandas as pd
 
 
 def read_csv(file_path: str) -> pd.DataFrame:
     """Read csv file to pandas dataframe.
+
+    Reading csv files with ';' as separator and ',' decimals.
 
     Arguments:
         file_path: Path to csv relative to project root file to be read.
@@ -17,6 +20,8 @@ def read_csv(file_path: str) -> pd.DataFrame:
 def write_csv(df: pd.DataFrame, file_path: str) -> None:
     """Write csv file to specified path.
 
+    Formatting csv files with ';' as separator and ',' decimals.
+
     Arguments:
         file_path: relative output path from project root for the csv file.
         df: DataFrame to convert to csv.
@@ -25,6 +30,18 @@ def write_csv(df: pd.DataFrame, file_path: str) -> None:
     project_root = get_project_root()
     path = project_root / file_path
     df.to_csv(path, sep=";", decimal=",", index=False)
+
+
+def save_fig(file_path: str) -> None:
+    """Save matplotlib figure.
+
+    Arguments:
+        file_path: relative output path from project root for the figure.
+
+    """
+    project_root = get_project_root()
+    path = project_root / file_path
+    plt.savefig(path)
 
 
 def get_project_root() -> Path:
@@ -39,5 +56,5 @@ def get_project_root() -> Path:
 
     # Raise exception if root directory is not found
     raise FileNotFoundError(
-        root_dir + " " + "directory was not found in the path hierarchy."
+        root_dir + " directory was not found in the path hierarchy."
     )
