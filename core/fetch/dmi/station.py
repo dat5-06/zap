@@ -1,10 +1,6 @@
-import os
 import requests
 
-from dotenv import load_dotenv
-
-load_dotenv()
-DMI_API_KEY = os.getenv("DMI_API_KEY")
+from core.util.env import DMI_API_KEY
 
 # I use dis to find the stations which is located within the bbox area,
 # which is focused on the "trekansområde"

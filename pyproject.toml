@@ -1,4 +1,18 @@
-#Configuration example
+[project]
+name = "ev-charging"
+version = "2024.2.0"
+requires-python = ">= 3.10"
+dependencies = [
+  'matplotlib >= 3.9.2',
+  'pandas >= 2.2.3',
+  'requests >= 2.32.3',
+  'ruff >= 0.6.7',
+  'python-dotenv >= 1.0.1',
+]
+
+[project.scripts]
+fetch-sources = 'core.fetch:main'
+
 [tool.ruff]
 lint.select = [
   "F",

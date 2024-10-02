@@ -1,6 +1,6 @@
 import pandas as pd
-from energi_service.call_energi_service_api import call_energi_service_api
-from util.util import write_csv
+from core.fetch.eds.call_energi_service_api import call_energi_service_api
+from core.util.util import write_csv
 
 
 def get_consumption_data(
@@ -73,7 +73,7 @@ def get_grid_area_consumption(
 
 def get_data_energi_service() -> None:
     """Get data from the API and save it in CSV format."""
-    output_dir = "data/external/"
+    output_dir = "core/data/external/"
 
     start_date = "2022-01-01T00:00"
     end_date = "2023-12-31T00:00"
