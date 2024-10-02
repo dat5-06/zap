@@ -1,10 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-
-
-def read_csv(path: str) -> pd.DataFrame:
-    """Read a CSV file and return a DataFrame."""
-    return pd.read_csv(path)
+from core.util.io import read_csv, save_fig
 
 
 def plot_consumption_data(file_path: str, year: int, month: int) -> None:
@@ -30,6 +26,8 @@ def plot_consumption_data(file_path: str, year: int, month: int) -> None:
     }
 
     colors = {"FlexSettledConsumption": "blue", "HourlySettledConsumption": "orange"}
+
+    output_path = "core/fetch/eds/energi_service_plot/"
 
     # Plot each column individually
     for column, ylabel in columns_to_plot.items():
@@ -59,8 +57,7 @@ def plot_consumption_data(file_path: str, year: int, month: int) -> None:
         plt.grid(True, linestyle="--", alpha=0.6)
         plt.legend(fontsize=14, loc="upper left")
         plt.tight_layout()
-        plt.savefig(f"{column}_plot_{year}_{month}.pdf")
-        plt.show()
+        save_fig(output_path + f"{column}_plot_{year}_{month}.pdf")
 
     # Plot both columns together
     plt.figure(figsize=(16, 8))
@@ -90,12 +87,12 @@ def plot_consumption_data(file_path: str, year: int, month: int) -> None:
     plt.grid(True, linestyle="--", alpha=0.6)
     plt.legend(fontsize=14, loc="upper left")
     plt.tight_layout()
-    plt.savefig(f"Combined_Consumption_plot_{year}_{month}.pdf")
-    plt.show()
+
+    save_fig(output_path + f"Combined_Consumption_plot_{year}_{month}.pdf")
 
 
 plot_consumption_data(
-    "data/external/ConsumptionPerGridArea.csv",
+    "core/data/external/ConsumptionPerGridArea.csv",
     year=2023,
     month=5,
 )

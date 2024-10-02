@@ -1,7 +1,6 @@
-from pathlib import Path
 import requests
-import csv
-
+import pandas as pd
+from core.util.io import write_csv
 from core.util.env import DMI_API_KEY
 
 # I use dis to fetch the data from the API and generate the noice csv files
@@ -22,11 +21,8 @@ params = {
     "humidity_past1h": "humidity",
 }
 
-# Create empty dictionaries to store observations for each parameter
-observations = {"temp": {}, "wind": {}, "rain": {}, "humidity": {}}
+combined_data = pd.DataFrame()
 
-
-# Fetch and store data for each parameter
 for param, name in params.items():
     url = (
         f"{base_url}"
@@ -36,46 +32,35 @@ for param, name in params.items():
         f"&parameterId={param}"
         f"&api-key={DMI_API_KEY}"
     )
+
     # Sometimes the program doesn't work with timeout
     # but ruff insists, so just delete if no work
     response = requests.get(url, timeout=30)
     data = response.json()
 
-    # Store observations by timestamp
-    for item in data.get("features", []):
-        observed = item["properties"].get("observed")
-        value = item["properties"].get("value")
-        if value is not None:
-            observations[name][observed] = value
+    # Normalize json data to use for dataframe manipulation
+    data_to_df = pd.json_normalize(data["features"])
 
+    # Add time and value as columns
+    data_to_df = data_to_df[["properties.observed", "properties.value"]]
+    data_to_df.columns = ["observed", f"{name}"]
 
-# Open a CSV file for writing
-with Path("w_d_codes.csv").open(mode="w", newline="") as file:
-    writer = csv.writer(file)
+    # TODO: check for missing values? Possibly a cleaning task
+    # rows can be removed with: df.dropna(subset=["column_name"])
 
-    # Write the header
-    writer.writerow(
-        [
-            "Observed",
-            "Temperature",
-            "Wind Speed",
-            "Rainfall",
-            "Humidity",
-        ]
-    )
+    # Initialize df with time and value for first parameter, else merge data on
+    # time.
+    if combined_data.empty:
+        combined_data = data_to_df
+    else:
+        combined_data = combined_data.merge(data_to_df, how="outer", on="observed")
 
-    # Get all unique timestamps
-    all_timestamps = (
-        set(observations["temp"].keys())
-        | set(observations["wind"].keys())
-        | set(observations["rain"].keys())
-        | set(observations["humidity"].keys())
-    )
+    # TODO: This way of gathering data yields dataframes that have variable row entries.
+    # This should be reconsidered.
 
-    # Write data row by row
-    for timestamp in sorted(all_timestamps):
-        temp = observations["temp"].get(timestamp, "")
-        wind = observations["wind"].get(timestamp, "")
-        rain = observations["rain"].get(timestamp, "")
-        humidity = observations["humidity"].get(timestamp, "")
-        writer.writerow([timestamp, temp, wind, rain, humidity])
+combined_data = combined_data.sort_values(by="observed", ascending=True)
+
+combined_data = pd.DataFrame(combined_data)
+
+output_path = "core/data/external/w_d_codes.csv"
+write_csv(combined_data, output_path)

@@ -1,7 +1,7 @@
-from util.util import read_csv, write_csv
+from core.util.io import read_csv, write_csv
 
 
-file_path = "data/interim/trefor_cleaned.csv"
+file_path = "core/data/interim/trefor_cleaned.csv"
 trefor_data = read_csv(file_path)
 
 # TODO: Date and time column manipulation are uncommented, can be added
@@ -39,5 +39,5 @@ for i in range(1, n_steps + 1):
 trefor_data = trefor_data.dropna()
 
 # Outputs the now processed data as csv. This should be torch.Dataset ready.
-output_path = "data/processed/trefor_final.csv"
+output_path = "core/data/processed/trefor_final.csv"
 write_csv(trefor_data, output_path)

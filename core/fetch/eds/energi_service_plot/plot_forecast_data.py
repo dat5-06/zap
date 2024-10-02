@@ -1,10 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-
-
-def read_csv(path: str) -> pd.DataFrame:
-    """Read a CSV file and return a DataFrame."""
-    return pd.read_csv(path)
+from core.util.io import read_csv, save_fig
 
 
 def plot_forecast_data(file_path: str, year: int, month: int) -> None:
@@ -64,7 +60,11 @@ def plot_forecast_data(file_path: str, year: int, month: int) -> None:
 
     plt.yticks(fontsize=20)
     plt.tight_layout()
-    plt.savefig(f"forecast_plot_{year}_{month}.pdf")
+
+    output_path = "core/fetch/eds/energi_service_plot/"
+    save_fig(output_path + f"forecast_plot_{year}_{month}.pdf")
 
 
-plot_forecast_data("data/external/ForeCast1hour_Onshore_Wind.csv", year=2023, month=5)
+plot_forecast_data(
+    "core/data/external/ForeCast1hour_Onshore_Wind.csv", year=2023, month=5
+)

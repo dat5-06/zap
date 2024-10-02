@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-from util.util import read_csv
+from core.util.io import read_csv, save_fig
 
 
 def plot_consumption_data(file_path: str, year: int, month: int) -> None:
@@ -61,12 +61,13 @@ def plot_consumption_data(file_path: str, year: int, month: int) -> None:
         plt.grid(True, linestyle="--", alpha=0.6)
         plt.legend(fontsize=14, loc="upper left")
         plt.tight_layout()
-        plt.savefig(f"{column}_plot_{year}_{month}.pdf")
-        plt.show()
+
+        output_path = "core/fetch/eds/energi_service_plot/"
+        save_fig(output_path + f"{column}_plot_{year}_{month}.pdf")
 
 
 plot_consumption_data(
-    "data/external/ConsumptionDK1.csv",
+    "core/data/external/ConsumptionDK1.csv",
     year=2023,
     month=5,
 )

@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import Dataset
-from util.util import read_csv
+from core.util.io import read_csv
 
 
 # TODO: Create one dataset for each csv then concatenate or one dataset with all csv?
@@ -12,7 +12,7 @@ class TreforDataset(Dataset):
         """Initialize dataset.
 
         Arguments:
-            file_path: Path of the preprocessed trefor data
+            file_path: Path of the preprocessed trefor data relative to project root.
 
         """
         self.data = read_csv(file_path).to_numpy()

@@ -1,9 +1,8 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-from util.util import read_csv, write_csv
+from core.util.io import read_csv, write_csv, save_fig
 
 # Loading the original data into a pandas dataframe
-file_path = "data/raw/trefor_raw.csv"
+file_path = "core/data/raw/trefor_raw.csv"
 consumption = read_csv(file_path)
 
 # Dropping date and time, as this is not needed when cleaning
@@ -45,9 +44,10 @@ grouped["mean"].plot(
     figsize=(10, 6),
     # rot="horizontal",
 )
-plt.savefig("average.pdf")
+fig_output_path = "core/preprocessing/average.pdf"
+save_fig(fig_output_path)
 # plt.show()
 
 # Return the cleaned data into another csv
-output_path = "data/interim/trefor_cleaned.csv"
+output_path = "core/data/interim/trefor_cleaned.csv"
 write_csv(cleaned, output_path)
