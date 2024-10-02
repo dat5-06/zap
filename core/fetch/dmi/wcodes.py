@@ -1,14 +1,8 @@
-import os
 from pathlib import Path
 import requests
 import csv
 
-from dotenv import load_dotenv
-
-load_dotenv()
-DMI_API_KEY = os.getenv("DMI_API_KEY")
-
-# from util.env import DMI_API_KEY
+from core.util.env import DMI_API_KEY
 
 # I use dis to fetch the data from the API and generate the noice csv files
 # For the first part we use station id "06104", which is Billund lufthavn
