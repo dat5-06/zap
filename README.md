@@ -18,6 +18,22 @@ venv\Scripts\activate
 pip install -e .
 ```
 
+## Notebooks
+
+First, we must add the virtual environment to the jupyter notebook kernel.
+
+```bash
+ipython kernel install --user --name=venv
+```
+
+Then, we can start the jupyter notebook server.
+
+```bash
+jupyter lab
+```
+
+Now, navigate to [http://localhost:8888](http://localhost:8888), and remember to select the venv as the kernel.
+
 ## Linting
 
 In **VSCode**, install the [ruff extension](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff)
