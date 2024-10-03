@@ -10,6 +10,7 @@ dependencies = [
   'python-dotenv >= 1.0.1',
   'torch >= 2.4.1',
   'jupyterlab >= 4.2.5',
+  'scikit-learn >= 1.5.2',
 ]
 
 [project.scripts]
