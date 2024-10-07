@@ -3,12 +3,26 @@ from matplotlib import pyplot as plt
 import pandas as pd
 
 
+def read_xlsx(file_path: str) -> pd.DataFrame:
+    """Read xlsx file to pandas dataframe.
+
+    Arguments:
+    ---------
+        file_path: Path to xlsx file relative to project root file to be read.
+
+    """
+    project_root = get_project_root()
+    path = project_root / file_path
+    return pd.read_excel(path)
+
+
 def read_csv(file_path: str) -> pd.DataFrame:
     """Read csv file to pandas dataframe.
 
     Reading csv files with ';' as separator and ',' decimals.
 
     Arguments:
+    ---------
         file_path: Path to csv relative to project root file to be read.
 
     """
@@ -23,6 +37,7 @@ def write_csv(df: pd.DataFrame, file_path: str) -> None:
     Formatting csv files with ';' as separator and ',' decimals.
 
     Arguments:
+    ---------
         file_path: relative output path from project root for the csv file.
         df: DataFrame to convert to csv.
 
@@ -36,6 +51,7 @@ def save_fig(file_path: str) -> None:
     """Save matplotlib figure.
 
     Arguments:
+    ---------
         file_path: relative output path from project root for the figure.
 
     """
