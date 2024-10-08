@@ -11,8 +11,8 @@ def read_xlsx(file_path: str) -> pd.DataFrame:
         file_path: Path to xlsx file relative to project root file to be read.
 
     """
-    project_root = get_project_root()
-    path = project_root / file_path
+    data_root = get_data_root()
+    path = data_root / file_path
     return pd.read_excel(path)
 
 
@@ -26,12 +26,12 @@ def read_csv(file_path: str) -> pd.DataFrame:
         file_path: Path to csv relative to project root file to be read.
 
     """
-    project_root = get_project_root()
-    path = project_root / file_path
+    data_root = get_data_root()
+    path = data_root / file_path
     return pd.read_csv(path, sep=";", decimal=",")
 
 
-def write_csv(df: pd.DataFrame, file_path: str) -> None:
+def write_csv(df: pd.DataFrame, file_path: str, force: bool = False) -> None:
     """Write csv file to specified path.
 
     Formatting csv files with ';' as separator and ',' decimals.
@@ -40,23 +40,37 @@ def write_csv(df: pd.DataFrame, file_path: str) -> None:
     ---------
         file_path: relative output path from project root for the csv file.
         df: DataFrame to convert to csv.
+        force: If True, overwrite existing file.
 
     """
-    project_root = get_project_root()
-    path = project_root / file_path
+    data_root = get_data_root()
+    path = data_root / file_path
+    if path.exists() and not force:
+        return
+
+    # Make directories if they don't exist.
+    path.parent.mkdir(parents=True, exist_ok=True)
+
     df.to_csv(path, sep=";", decimal=",", index=False)
 
 
-def save_fig(file_path: str) -> None:
+def save_fig(file_path: str, force: bool = False) -> None:
     """Save matplotlib figure.
 
     Arguments:
     ---------
         file_path: relative output path from project root for the figure.
+        force: If True, overwrite existing file.
 
     """
-    project_root = get_project_root()
-    path = project_root / file_path
+    figures_root = get_figures_root()
+    path = figures_root / file_path
+    if path.exists() and not force:
+        return
+
+    # Make directories if they don't exist.
+    path.parent.mkdir(parents=True, exist_ok=True)
+
     plt.savefig(path)
 
 
@@ -74,3 +88,13 @@ def get_project_root() -> Path:
     raise FileNotFoundError(
         root_dir + " directory was not found in the path hierarchy."
     )
+
+
+def get_data_root() -> Path:
+    """Return path of the data root directory."""
+    return get_project_root() / "core/data"
+
+
+def get_figures_root() -> Path:
+    """Return path of the figures root directory."""
+    return get_project_root() / "core/figures"
