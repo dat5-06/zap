@@ -12,10 +12,12 @@ dependencies = [
   'jupyterlab >= 4.2.5',
   'scikit-learn >= 1.5.2',
   'openpyxl >= 3.1.5',
+  'tqdm >= 4.66.5',
 ]
 
 [project.scripts]
-fetch-sources = 'core.fetch:main'
+fetch-sources = 'core.fetch:fetch'
+preprocess = 'core.preprocessing:preprocess'
 
 [tool.ruff]
 lint.select = [
