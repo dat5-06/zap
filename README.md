@@ -8,6 +8,7 @@ On **Unix** based systems:
 python -m venv venv
 source ./venv/bin/activate
 pip install -e .
+pre-commit install
 ```
 
 On **Windows**:
@@ -16,6 +17,7 @@ On **Windows**:
 python -m venv venv
 venv\Scripts\activate
 pip install -e .
+pre-commit install
 ```
 
 ## Notebooks
