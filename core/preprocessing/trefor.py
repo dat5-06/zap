@@ -1,4 +1,4 @@
-from core.util.io import read_csv, write_csv, save_fig, read_xlsx
+from core.util.io import read_csv, write_csv, read_xlsx
 import pandas as pd
 
 
@@ -18,8 +18,8 @@ def park() -> None:
     write_csv(combined, "interim/trefor_park.csv")
 
 
-def household() -> None:
-    """Preprocess the Trefor household data."""
+def household_cleaning() -> None:
+    """Clean the Trefor household data."""
     # Loading the original data into a pandas dataframe
     file_path = "raw/trefor_raw.csv"
     consumption = read_csv(file_path)
@@ -36,11 +36,6 @@ def household() -> None:
     # (some of it is weird, according to Trefor)
     cleaned = non_zeroes.apply(lambda series: series[series < 100])
 
-    # Print the removed datapoints
-    # datapoint_count = df_original.count().sum()
-    # print(f"Original datapoints: {datapoint_count}")
-    # print(f"Indicies removed: {datapoint_count - cleaned.count().sum()}")
-
     # remove households with maximum consumption less than 2kWh
     cleaned = cleaned.loc[:, (cleaned.max(axis=0) > 2)]
     # remove households with mean consumption less than 0.1kWh
@@ -53,36 +48,30 @@ def household() -> None:
     output_path = "interim/trefor_cleaned.csv"
     write_csv(cleaned, output_path)
 
+
+def household_preprocessing() -> None:
+    """Preprocess the Trefor household data."""
+    # Loading the cleaned data into a pandas dataframe
+    file_path = "interim/trefor_cleaned.csv"
+    trefor_data = read_csv(file_path)
+
+    # Add a total consumption column to the dataframe and remove
+    # all individual households
+    trefor_data["Total_Consumption"] = trefor_data.sum(axis=1, numeric_only=True)
+    trefor_data = trefor_data.filter(["Dato", "Time", "Total_Consumption"], axis=1)
+
+    # Outputs the processed data as csv.
+    output_path = "processed/trefor_final.csv"
+    write_csv(trefor_data, output_path)
+
     print("Processed Trefor household data")
-
-
-def plot_household() -> None:
-    """Plot the combined the Trefor household data."""
-    cleaned = read_csv("raw/trefor_cleaned.csv")
-    # get mean consumption per hour for each household
-    grouped = cleaned.drop(["Dato"], axis=1).groupby("Time").mean()
-
-    # take mean of all households
-    grouped["mean"] = grouped.to_numpy().mean(axis=1)
-
-    # plot it
-    grouped["mean"].plot(
-        kind="bar",
-        xlabel="Time of Day",
-        ylabel="Mean Consumption (kWh)",
-        # title="Mean Consumption per Hour",
-        figsize=(10, 6),
-        # rot="horizontal",
-    )
-    fig_output_path = "trefor/average_household.pdf"
-    save_fig(fig_output_path)
-    # plt.show()
 
 
 def trefor() -> None:
     """Preprocess all Trefor data."""
     park()
-    household()
+    household_cleaning()
+    household_preprocessing()
 
 
 if __name__ == "__main__":
