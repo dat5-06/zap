@@ -1,5 +1,5 @@
 [project]
-name = "ev-charging"
+name = "zap"
 version = "2024.2.0"
 requires-python = ">= 3.10"
 dependencies = [

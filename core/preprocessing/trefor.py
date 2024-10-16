@@ -1,8 +1,10 @@
+from core.preprocessing.sliding_window import apply_sliding
 from core.util.io import read_csv, write_csv, read_xlsx
 import pandas as pd
+import numpy as np
 
 
-def park() -> None:
+def park_cleaning() -> None:
     """Process public charging station data."""
     original = read_xlsx("raw/trefor_park.xlsx")
 
@@ -16,6 +18,38 @@ def park() -> None:
     # merge back together and save
     combined = pd.concat([original[["Dato", "Time"]], cleaned_data], axis=1)
     write_csv(combined, "interim/trefor_park.csv")
+
+
+def park_preprocess(backward: int, forward: int) -> None:
+    """Process public charginc station data."""
+    original = read_csv("interim/trefor_park.csv")
+
+    columns = np.array(
+        ["Dato", "Time"]
+        + [f"t-{backward-i}" for i in range(backward)]
+        + [f"t+{i}" for i in range(forward)]
+    )
+    merged = np.array([], dtype=object).reshape(0, 2 + backward + forward)
+
+    capacities = [800, 2500, 2000, 800, 900, 1300, 700]
+    for i, capacity in enumerate(capacities, 1):
+        # normalize based on capacity to get relative (%) values
+        original[f"Ladepark {i}"] = original[f"Ladepark {i}"] / capacity
+
+        (x, y), index = apply_sliding(original[f"Ladepark {i}"], backward, forward)
+
+        # Save corresponding time
+        time = original[
+            original.index.isin(
+                range(backward + index, len(original.index) - forward + 1)
+            )
+        ][["Dato", "Time"]]
+
+        m = np.concatenate([time, x, y], axis=1)
+
+        merged = np.concatenate([merged, m])
+
+    write_csv(pd.DataFrame(merged, columns=columns), "processed/park_timeseries.csv")
 
 
 def household_cleaning() -> None:
@@ -67,13 +101,13 @@ def household_preprocessing() -> None:
     print("Processed Trefor household data")
 
 
-def trefor() -> None:
+def trefor(backward: int, forward: int) -> None:
     """Preprocess all Trefor data."""
-    park()
+    park_cleaning()
+    park_preprocess(backward, forward)
     household_cleaning()
     household_preprocessing()
 
 
 if __name__ == "__main__":
-    trefor()
-    # plot_household()
+    trefor(24, 24)
