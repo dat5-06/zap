@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import pandas as pd
 
 from core.util.io import read_csv
 
@@ -89,4 +90,46 @@ def get_timeseries_dataset(
         y_train.squeeze(1),
         y_val.squeeze(1),
         y_test.squeeze(1),
+    )
+
+
+def get_trefor_park_as_tensor(
+    timeseries: pd.DataFrame,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Get timeseries dataset as tensor.
+
+    Arguments:
+    ---------
+        timeseries: The time series data
+
+    """
+    x = []
+    y = []
+
+    time = timeseries.drop(["Dato", "Time"], axis=1).to_numpy()
+
+    # loop through each row in timeseries
+    for i in range(len(time)):
+        x_temp = []
+        y_temp = []
+        # add t-24 to t-1 to x, add t+0 to t+23 to y
+        for j in range(24):
+            x_temp.append([time[i][j]])
+            y_temp.append([time[i][24 + j]])
+
+        # append values to array
+        x.append(x_temp)
+        y.append(y_temp)
+
+    # convert list to numpy and float
+    x = np.array(x).astype(float)
+    y = np.array(y).astype(float)
+
+    # Create tensors of shape (len(x), 24, 1)
+    x_tensor = torch.tensor(data=x).float()
+    y_tensor = torch.tensor(data=y).float()
+
+    return (
+        x_tensor,
+        y_tensor.squeeze(1),
     )
