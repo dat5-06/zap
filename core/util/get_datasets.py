@@ -139,7 +139,8 @@ def split_sequences(
     features: np.ndarray, targets: np.ndarray, lookback: int, lookahead: int
 ) -> tuple[np.ndarray, np.ndarray]:
     """Split a multivaritae sequence past, future samples."""
-    x, y = [], []
+    x = []
+    y = []
     for i in range(len(features)):
         # Get the lookback / forward window
         lookback_index = i + lookback
@@ -165,7 +166,8 @@ def apply_sliding_window(
 
     """
     # Initialize lists to hold features and target
-    x = y = []
+    x = []
+    y = []
 
     # Add n datapoints to x then add target to y.
     for i in range(n, len(timeseries)):
@@ -252,7 +254,8 @@ def get_trefor_park_as_tensor(
         timeseries: The time series data
 
     """
-    x = y = []
+    x = []
+    y = []
 
     time = timeseries.drop(["Dato", "Time"], axis=1).to_numpy()
 
