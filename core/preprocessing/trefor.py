@@ -45,7 +45,7 @@ def park_preprocess(backward: int, forward: int) -> None:
             )
         ][["Dato", "Time"]]
         m = np.concatenate([time, x, y], axis=1)
-        if i < len(capacities) - 2:
+        if i <= len(capacities) - 2:
             merged = np.concatenate([merged, m])
         elif i == len(capacities) - 1:
             write_csv(
