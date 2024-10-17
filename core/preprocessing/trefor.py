@@ -44,12 +44,21 @@ def park_preprocess(backward: int, forward: int) -> None:
                 range(backward + index, len(original.index) - forward + 1)
             )
         ][["Dato", "Time"]]
-
         m = np.concatenate([time, x, y], axis=1)
+        if i < len(capacities) - 2:
+            merged = np.concatenate([merged, m])
+        elif i == len(capacities) - 1:
+            write_csv(
+                pd.DataFrame(m, columns=columns),
+                "processed/park_testing.csv",
+            )
+        elif i == len(capacities):
+            write_csv(
+                pd.DataFrame(m, columns=columns),
+                "processed/park_validation.csv",
+            )
 
-        merged = np.concatenate([merged, m])
-
-    write_csv(pd.DataFrame(merged, columns=columns), "processed/park_timeseries.csv")
+    write_csv(pd.DataFrame(merged, columns=columns), "processed/park_training.csv")
 
 
 def household_cleaning() -> None:
