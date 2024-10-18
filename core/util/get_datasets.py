@@ -5,6 +5,70 @@ import pandas as pd
 from core.util.io import read_csv
 
 
+def normalize_trefor_park(park_data: pd.DataFrame) -> pd.DataFrame:
+    """Normalize park data based on capacity."""
+    capacities = [800, 2500, 2000, 800, 900, 1300, 700]
+    for i, capacity in enumerate(capacities, 1):
+        # normalize based on capacity to get relative (%) values
+        park_data[f"Ladepark {i}"] = park_data[f"Ladepark {i}"] / capacity
+
+    return park_data
+
+
+def get_park_dataset(
+    lookback: int, lookahead: int
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Get train-, val- and test datasets for Trefor parks."""
+    x_train = x_val = x_test = y_train = y_val = y_test = np.array([])
+
+    # only uses part 1 through 6
+    for i in range(1, 7):
+        park = read_csv(f"processed/park_{i}.csv")
+        park = park.drop(["Date", "Time"], axis=1)
+        x, y = split_sequences(park.to_numpy(), park.to_numpy(), lookback, lookahead)
+
+        match i:
+            case 1:
+                x_train = x
+                y_train = y
+            case num if num <= 4:
+                x_train = np.concatenate((x_train, x), axis=0)
+                y_train = np.concatenate((y_train, y), axis=0)
+            case 5:
+                x_val = x
+                y_val = y
+            case 6:
+                x_test = x
+                y_test = y
+
+    return (
+        x_train,
+        y_train,
+        x_val,
+        y_val,
+        x_test,
+        y_test,
+    )
+
+
+def split_sequences(
+    features: np.ndarray, targets: np.ndarray, lookback: int, lookahead: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """Split a multivaritae sequence past, future samples."""
+    x, y = [], []
+    for i in range(len(features)):
+        # Get the lookback / forward window
+        lookback_index = i + lookback
+        fwd_index = lookback_index + lookahead
+        # check if we are out of bounds
+        if fwd_index > len(features):
+            break
+        seq_x, seq_y = features[i:lookback_index], targets[lookback_index:fwd_index, -1]
+        x.append(seq_x)
+        y.append(seq_y)
+    return np.array(x), np.array(y)
+
+
 def apply_sliding_window(
     timeseries: np.ndarray, n: int
 ) -> tuple[np.ndarray, np.ndarray]:
@@ -17,8 +81,7 @@ def apply_sliding_window(
 
     """
     # Initialize lists to hold features and target
-    x = []
-    y = []
+    x = y = []
 
     # Add n datapoints to x then add target to y.
     for i in range(n, len(timeseries)):
@@ -27,6 +90,8 @@ def apply_sliding_window(
     return np.array(x), np.array(y)
 
 
+# X_ss, y_mm = split_sequences(X_trans, y_trans, 100, 50)
+# print(X_ss.shape, y_mm.shape)
 def get_trefor_timeseries() -> np.ndarray:
     """Get processed trefor timeseries data as numpy array."""
     # Read trefor data csv
@@ -103,8 +168,7 @@ def get_trefor_park_as_tensor(
         timeseries: The time series data
 
     """
-    x = []
-    y = []
+    x = y = []
 
     time = timeseries.drop(["Dato", "Time"], axis=1).to_numpy()
 
