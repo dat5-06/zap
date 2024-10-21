@@ -31,7 +31,7 @@ def read_csv(file_path: str) -> pd.DataFrame:
     return pd.read_csv(path, sep=";", decimal=",")
 
 
-def write_csv(df: pd.DataFrame, file_path: str, force: bool = False) -> None:
+def write_csv(df: pd.DataFrame, file_path: str, force: bool = True) -> None:
     """Write csv file to specified path.
 
     Formatting csv files with ';' as separator and ',' decimals.
@@ -54,7 +54,7 @@ def write_csv(df: pd.DataFrame, file_path: str, force: bool = False) -> None:
     df.to_csv(path, sep=";", decimal=",", index=False)
 
 
-def save_fig(file_path: str, force: bool = False) -> None:
+def save_fig(file_path: str, force: bool = True) -> None:
     """Save matplotlib figure.
 
     Arguments:
