@@ -12,9 +12,7 @@ def park_preprocess_lin() -> None:
         # normalize based on capacity to get relative (%) values
         original[f"Ladepark {i}"] = original[f"Ladepark {i}"] / capacity
 
-    original = original.drop(columns=["Dato", "Time"])
-
-    write_csv(original, "processed/park_timeseries_lin.csv")
+    write_csv(original, "interim/park_timeseries_lin.csv")
 
 
 def park_cleaning() -> None:
@@ -35,7 +33,7 @@ def park_cleaning() -> None:
 
 def park_preprocess() -> None:
     """Process public charginc station data."""
-    original = read_csv("interim/trefor_park.csv")
+    original = read_csv("interim/park_timeseries_lin.csv")
 
     for park_num in range(1, 7):
         park = pd.DataFrame(original[["Dato", "Time", f"Ladepark {park_num}"]].dropna())
