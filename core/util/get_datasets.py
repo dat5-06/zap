@@ -18,7 +18,7 @@ def normalize_trefor_park(park_data: pd.DataFrame) -> pd.DataFrame:
 def get_park_dataset(
     lookback: int, lookahead: int
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Get train-, val- and test datasets for Trefor parks."""
+    """Get normalized train-, val- and test datasets for Trefor parks."""
     x_train = x_val = x_test = y_train = y_val = y_test = np.array([])
 
     # only uses part 1 through 6
