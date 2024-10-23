@@ -15,6 +15,45 @@ def normalize_trefor_park(park_data: pd.DataFrame) -> pd.DataFrame:
     return park_data
 
 
+def get_one_park_dataset(
+    lookback: int, lookahead: int, park_number: int
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Get normalized train-, val- and test datasets for Trefor parks."""
+    x_train = x_val = x_test = y_train = y_val = y_test = np.array([])
+    park = read_csv(f"processed/park_{park_number}.csv")
+    park = park.drop(["Date", "Time"], axis=1)
+    x, y = split_sequences(park.to_numpy(), park.to_numpy(), lookback, lookahead)
+
+    # Create indexes for 80% training, 10% validation, and 10% testing
+    split_test = int(len(x) * 0.9)
+    split_val = int(len(x) * 0.8)
+
+    # split into train and test
+    x_train, y_train, x_test, y_test = (
+        x[:split_test],
+        y[:split_test],
+        x[split_test:],
+        y[split_test:],
+    )
+
+    # split train into train and val
+    x_train, y_train, x_val, y_val = (
+        x_train[:split_val],
+        y_train[:split_val],
+        x_train[split_val:],
+        y_train[split_val:],
+    )
+
+    return (
+        x_train,
+        y_train,
+        x_val,
+        y_val,
+        x_test,
+        y_test,
+    )
+
+
 def get_park_dataset(
     lookback: int, lookahead: int
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
