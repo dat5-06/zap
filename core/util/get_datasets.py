@@ -197,8 +197,3 @@ def get_trefor_park_as_tensor(
         x_tensor,
         y_tensor.squeeze(1),
     )
-
-
-def denormalize_tensor(multiply: int, tensor: torch.Tensor) -> torch.Tensor:
-    """Denormalize trefor data."""
-    return tensor * multiply
