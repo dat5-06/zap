@@ -19,7 +19,6 @@ def get_one_park_dataset(
     lookback: int, lookahead: int, park_number: int
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Get normalized train-, val- and test datasets for Trefor parks."""
-    x_train = x_val = x_test = y_train = y_val = y_test = np.array([])
     park = read_csv(f"processed/park_{park_number}.csv")
     park = park.drop(["Date", "Time"], axis=1)
     x, y = split_sequences(park.to_numpy(), park.to_numpy(), lookback, lookahead)
@@ -87,6 +86,47 @@ def get_park_dataset(
         y_val,
         x_test,
         y_test,
+    )
+
+
+def get_park_datasets(
+    lookback: int, lookahead: int
+) -> tuple[
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    np.ndarray,
+]:
+    """Get concatenated normalized train-, val- and test datasets for Trefor parks."""
+    x_train, y_train = [], []
+    x_val, y_val = [], []
+    x_test, y_test = [], []
+    indicies = []
+    for i in range(1, 7):
+        x_train_p, y_train_p, x_val_p, y_val_p, x_test_p, y_test_p = (
+            get_one_park_dataset(lookback, lookahead, i)
+        )
+        x_train.extend(x_train_p)
+        y_train.extend(y_train_p)
+        x_val.extend(x_val_p)
+        y_val.extend(y_val_p)
+        x_test.extend(x_test_p)
+        y_test.extend(y_test_p)
+        split_1 = len(x_train_p)
+        split_2 = split_1 + len(x_val_p)
+        indicies.append([split_1, split_2])
+
+    return (
+        torch.Tensor(np.array(x_train)),
+        torch.Tensor(np.array(y_train)),
+        torch.Tensor(np.array(x_val)),
+        torch.Tensor(np.array(y_val)),
+        torch.Tensor(np.array(x_test)),
+        torch.Tensor(np.array(y_test)),
+        np.array(indicies),
     )
 
 
