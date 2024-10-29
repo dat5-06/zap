@@ -105,6 +105,7 @@ def get_park_datasets(
     x_val, y_val = [], []
     x_test, y_test = [], []
     indicies = []
+    combined_len = 0
     for i in range(1, 7):
         x_train_p, y_train_p, x_val_p, y_val_p, x_test_p, y_test_p = (
             get_one_park_dataset(lookback, lookahead, i)
@@ -115,17 +116,21 @@ def get_park_datasets(
         y_val.extend(y_val_p)
         x_test.extend(x_test_p)
         y_test.extend(y_test_p)
-        split_1 = len(x_train_p)
+
+        # Get indicies at which splits occur
+        split_1 = combined_len + len(x_train_p)
         split_2 = split_1 + len(x_val_p)
         indicies.append([split_1, split_2])
 
+        combined_len += len(x_train_p) + len(x_val_p) + len(x_test_p)
+
     return (
-        torch.Tensor(np.array(x_train)),
-        torch.Tensor(np.array(y_train)),
-        torch.Tensor(np.array(x_val)),
-        torch.Tensor(np.array(y_val)),
-        torch.Tensor(np.array(x_test)),
-        torch.Tensor(np.array(y_test)),
+        torch.Tensor(np.array(x_train)).float(),
+        torch.Tensor(np.array(y_train)).float(),
+        torch.Tensor(np.array(x_val)).float(),
+        torch.Tensor(np.array(y_val)).float(),
+        torch.Tensor(np.array(x_test)).float(),
+        torch.Tensor(np.array(y_test)).float(),
         np.array(indicies),
     )
 
