@@ -16,11 +16,17 @@ def normalize_trefor_park(park_data: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_one_park_dataset(
-    lookback: int, lookahead: int, park_number: int
+    lookback: int, lookahead: int, park_number: int, features: dict
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Get normalized train-, val- and test datasets for Trefor parks."""
     park = read_csv(f"processed/park_{park_number}.csv")
-    park = park.drop(["Date", "Time"], axis=1)
+    drop_columns = [
+        j
+        for j in list(park.columns)
+        if features.get(j) is None or features.get(j) is False
+    ]
+    drop_columns.remove("Consumption")  # Ensure "consumption" column is not dropped
+    park = park.drop(drop_columns, axis=1)
     x, y = split_sequences(park.to_numpy(), park.to_numpy(), lookback, lookahead)
 
     # Create indexes for 80% training, 10% validation, and 10% testing
@@ -54,7 +60,7 @@ def get_one_park_dataset(
 
 
 def get_park_dataset(
-    lookback: int, lookahead: int
+    lookback: int, lookahead: int, features: dict = {}
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Get normalized train-, val- and test datasets for Trefor parks."""
     x_train = x_val = x_test = y_train = y_val = y_test = np.array([])
@@ -62,9 +68,14 @@ def get_park_dataset(
     # only uses part 1 through 6
     for i in range(1, 7):
         park = read_csv(f"processed/park_{i}.csv")
-        park = park.drop(["Date", "Time"], axis=1)
+        drop_columns = [
+            j
+            for j in list(park.columns)
+            if features.get(j) is None or features.get(j) is False
+        ]
+        drop_columns.remove("Consumption")  # Ensure "consumption" column is not dropped
+        park = park.drop(drop_columns, axis=1)
         x, y = split_sequences(park.to_numpy(), park.to_numpy(), lookback, lookahead)
-
         match i:
             case 1:
                 x_train = x
@@ -90,7 +101,7 @@ def get_park_dataset(
 
 
 def get_park_datasets(
-    lookback: int, lookahead: int
+    lookback: int, lookahead: int, features: dict = {}
 ) -> tuple[
     torch.Tensor,
     torch.Tensor,
@@ -108,7 +119,7 @@ def get_park_datasets(
     combined_len = 0
     for i in range(1, 7):
         x_train_p, y_train_p, x_val_p, y_val_p, x_test_p, y_test_p = (
-            get_one_park_dataset(lookback, lookahead, i)
+            get_one_park_dataset(lookback, lookahead, i, features)
         )
         x_train.extend(x_train_p)
         y_train.extend(y_train_p)
