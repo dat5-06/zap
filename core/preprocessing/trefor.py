@@ -1,5 +1,6 @@
 from core.util.io import read_csv, write_csv, read_xlsx
 import pandas as pd
+import numpy as np
 
 capacities = [800, 2500, 2000, 800, 900, 1300, 700]
 
@@ -28,6 +29,8 @@ def park_cleaning() -> None:
 
     # merge back together and save
     combined = pd.concat([original[["Dato", "Time"]], cleaned_data], axis=1)
+    combined = week_day(combined)
+    combined = hour_of_day(combined)
     write_csv(combined, "interim/trefor_park.csv")
 
 
@@ -36,7 +39,19 @@ def park_preprocess() -> None:
     original = read_csv("interim/park_timeseries_lin.csv")
 
     for park_num in range(1, 7):
-        park = pd.DataFrame(original[["Dato", "Time", f"Ladepark {park_num}"]].dropna())
+        park = pd.DataFrame(
+            original[
+                [
+                    "Dato",
+                    "Time",
+                    "Hour_x",
+                    "Hour_y",
+                    "Day_x",
+                    "Day_y",
+                    f"Ladepark {park_num}",
+                ]
+            ].dropna()
+        )
         park_renamed = park.rename(
             columns={f"Ladepark {park_num}": "Consumption", "Dato": "Date"}
         )
@@ -45,51 +60,22 @@ def park_preprocess() -> None:
     print("Processed Trefor park data")
 
 
-def household_cleaning() -> None:
-    """Clean the Trefor household data."""
-    # Loading the original data into a pandas dataframe
-    file_path = "raw/trefor_raw.csv"
-    consumption = read_csv(file_path)
-
-    # Dropping date and time, as this is not needed when cleaning
-    df_original = consumption.drop(columns=["Dato", "Time"])
-
-    # Copy is disconnected from the orignal df
-    df_cleaning = df_original.copy(deep=True)
-
-    # Only take valuse that are greater than 0
-    non_zeroes = df_cleaning.apply(lambda series: series[series > 0])
-    # And only take values that are less than 100
-    # (some of it is weird, according to Trefor)
-    cleaned = non_zeroes.apply(lambda series: series[series < 100])
-
-    # remove households with maximum consumption less than 2kWh
-    cleaned = cleaned.loc[:, (cleaned.max(axis=0) > 2)]
-    # remove households with mean consumption less than 0.1kWh
-    cleaned = cleaned.loc[:, (cleaned.mean(axis=0) > 0.1)]
-
-    # Reads the date and time before transfering to csv file
-    cleaned = pd.concat([consumption[["Dato", "Time"]], cleaned], axis=1)
-
-    # Return the cleaned data into another csv
-    output_path = "interim/trefor_cleaned.csv"
-    write_csv(cleaned, output_path)
+def week_day(df: pd.DataFrame) -> pd.DataFrame:
+    """Add a column with the weekday of the date."""
+    df["Dato"] = pd.to_datetime(df["Dato"], format="%d-%m-%Y")
+    df["Weekday"] = df["Dato"].dt.dayofweek / 7
+    df["Day_x"] = np.sin(2 * np.pi * df.Weekday)
+    df["Day_y"] = np.cos(2 * np.pi * df.Weekday)
+    return df
 
 
-def household_preprocessing() -> None:
-    """Preprocess the Trefor household data."""
-    # Loading the cleaned data into a pandas dataframe
-    file_path = "interim/trefor_cleaned.csv"
-    trefor_data = read_csv(file_path)
-
-    # Add a total consumption column to the dataframe and remove
-    # all individual households
-    trefor_data["Total_Consumption"] = trefor_data.sum(axis=1, numeric_only=True)
-    trefor_data = trefor_data.filter(["Dato", "Time", "Total_Consumption"], axis=1)
-
-    # Outputs the processed data as csv.
-    output_path = "processed/trefor_final.csv"
-    write_csv(trefor_data, output_path)
+def hour_of_day(df: pd.DataFrame) -> pd.DataFrame:
+    """Add a column with the hour of the day."""
+    df["Time"] = pd.to_datetime(df["Time"], format="%H:%M")
+    df["Hour"] = df["Time"].dt.hour / 24
+    df["Hour_x"] = np.sin(2 * np.pi * df.Hour)
+    df["Hour_y"] = np.cos(2 * np.pi * df.Hour)
+    return df
 
 
 def trefor() -> None:
@@ -97,8 +83,6 @@ def trefor() -> None:
     park_cleaning()
     park_preprocess_lin()
     park_preprocess()
-    household_cleaning()
-    household_preprocessing()
     print("Processed Trefor data")
 
 
