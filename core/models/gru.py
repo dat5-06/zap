@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import warnings
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
@@ -15,6 +16,10 @@ class GRU(nn.Module):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.input_size = input_size
+        self.dropout_rate = dropout_rate
+
+        # Suppress user warning from dropout
+        warnings.filterwarnings("ignore")
 
         self.gru = nn.GRU(
             input_size,
@@ -38,4 +43,4 @@ class GRU(nn.Module):
 
     def get_members(self) -> list:
         """Get all members used to initialise the object."""
-        return [self.input_size, self.hidden_size, self.num_layers]
+        return [self.input_size, self.hidden_size, self.num_layers, self.dropout_rate]
