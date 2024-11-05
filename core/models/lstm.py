@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import warnings
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
@@ -7,26 +8,27 @@ device = "cuda:0" if torch.cuda.is_available() else "cpu"
 class LSTM(nn.Module):
     """LSTM model."""
 
-    input_size = 0
-    output_size = 0
-
     def __init__(
         self,
         input_size: int,
         hidden_size: int,
-        num_stacked_layers: int,
+        num_layers: int,
         dropout_rate: float,
     ) -> None:
         """Initialize the LSTM and its layers."""
         super().__init__()
-        self.hidden_size = hidden_size
-        self.num_stacked_layers = num_stacked_layers
         self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.dropout_rate = dropout_rate
+
+        # Suppress user warning from dropout
+        warnings.filterwarnings("ignore")
 
         self.lstm = nn.LSTM(
             input_size,
             hidden_size,
-            num_stacked_layers,
+            num_layers,
             batch_first=True,
             dropout=dropout_rate,
         )
@@ -38,12 +40,8 @@ class LSTM(nn.Module):
         """Define the forward pass."""
         batch_size = x.size(0)
 
-        h0 = torch.zeros(self.num_stacked_layers, batch_size, self.hidden_size).to(
-            device
-        )
-        c0 = torch.zeros(self.num_stacked_layers, batch_size, self.hidden_size).to(
-            device
-        )
+        h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device)
+        c0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device)
 
         x, _ = self.lstm(x, (h0, c0))
         x = self.relu(x)
@@ -53,4 +51,4 @@ class LSTM(nn.Module):
 
     def get_members(self) -> list:
         """Get all members used to initialise the object."""
-        return [self.input_size, self.hidden_size, self.num_stacked_layers]
+        return [self.input_size, self.hidden_size, self.num_layers, self.dropout_rate]
