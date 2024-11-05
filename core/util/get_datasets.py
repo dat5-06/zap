@@ -1,22 +1,11 @@
 import torch
 import numpy as np
-import pandas as pd
 
 from core.util.io import read_csv
 
 
-def normalize_trefor_park(park_data: pd.DataFrame) -> pd.DataFrame:
-    """Normalize park data based on capacity."""
-    capacities = [800, 2500, 2000, 800, 900, 1300, 700]
-    for i, capacity in enumerate(capacities, 1):
-        # normalize based on capacity to get relative (%) values
-        park_data[f"Ladepark {i}"] = park_data[f"Ladepark {i}"] / capacity
-
-    return park_data
-
-
 def get_one_park_dataset(
-    lookback: int, lookahead: int, park_number: int, features: dict
+    lookback: int, lookahead: int, park_number: int, features: dict, folds: int | None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Get normalized train-, val- and test datasets for Trefor parks."""
     park = read_csv(f"processed/park_{park_number}.csv")
@@ -29,6 +18,80 @@ def get_one_park_dataset(
     park = park.drop(drop_columns, axis=1)
     x, y = split_sequences(park.to_numpy(), park.to_numpy(), lookback, lookahead)
 
+    # Initialise empty arrays
+    x_train, x_val, x_test = [], [], []
+    y_train, y_val, y_test = [], [], []
+
+    # Check if the data should be cross validation
+    if folds is not None:
+        x_train, y_train, x_val, y_val, x_test, y_test = get_one_cross_park(x, y, folds)
+    else:
+        x_train, y_train, x_val, y_val, x_test, y_test = get_one_norm_park(x, y)
+
+    return (
+        x_train,
+        y_train,
+        x_val,
+        y_val,
+        x_test,
+        y_test,
+    )
+
+
+def get_one_cross_park(
+    x: np.ndarray, y: np.ndarray, folds_num: int
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Split the data for cross-validation."""
+    # Create indexes for 80% training, 10% validation, and 10% testing
+    split_test = int(len(x) * 0.9)
+
+    # Split into temporary train and test sets
+    x_train_temp, y_train_temp, x_test, y_test = (
+        x[:split_test],
+        y[:split_test],
+        x[split_test:],
+        y[split_test:],
+    )
+
+    # Define folds for cross-validation
+    fold_size = len(x_train_temp) // folds_num
+
+    folds = [
+        (
+            x_train_temp[i * fold_size : (i + 1) * fold_size],
+            y_train_temp[i * fold_size : (i + 1) * fold_size],
+        )
+        for i in range(folds_num)
+    ]
+
+    x_train, y_train, x_val, y_val = [], [], [], []
+
+    # Loop over folds and append the training and validation sets in each split
+    for i in range(folds_num):
+        x_val_fold, y_val_fold = folds[i]
+        x_val.append(x_val_fold)
+        y_val.append(y_val_fold)
+
+        x_train_fold = [folds[j][0] for j in range(folds_num) if j != i]
+        y_train_fold = [folds[j][1] for j in range(folds_num) if j != i]
+
+        x_train.append(np.concatenate(x_train_fold, axis=0))
+        y_train.append(np.concatenate(y_train_fold, axis=0))
+
+    return (
+        np.concatenate(x_train, axis=0),
+        np.concatenate(y_train, axis=0),
+        np.concatenate(x_val, axis=0),
+        np.concatenate(y_val, axis=0),
+        x_test,
+        y_test,
+    )
+
+
+def get_one_norm_park(
+    x: np.ndarray, y: np.ndarray
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Get the data split of training, validation, and test in that sequence."""
     # Create indexes for 80% training, 10% validation, and 10% testing
     split_test = int(len(x) * 0.9)
     split_val = int(len(x) * 0.8)
@@ -59,49 +122,8 @@ def get_one_park_dataset(
     )
 
 
-def get_park_dataset(
-    lookback: int, lookahead: int, features: dict = {}
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Get normalized train-, val- and test datasets for Trefor parks."""
-    x_train = x_val = x_test = y_train = y_val = y_test = np.array([])
-
-    # only uses part 1 through 6
-    for i in range(1, 7):
-        park = read_csv(f"processed/park_{i}.csv")
-        drop_columns = [
-            j
-            for j in list(park.columns)
-            if features.get(j) is None or features.get(j) is False
-        ]
-        drop_columns.remove("Consumption")  # Ensure "consumption" column is not dropped
-        park = park.drop(drop_columns, axis=1)
-        x, y = split_sequences(park.to_numpy(), park.to_numpy(), lookback, lookahead)
-        match i:
-            case 1:
-                x_train = x
-                y_train = y
-            case num if num <= 4:
-                x_train = np.concatenate((x_train, x), axis=0)
-                y_train = np.concatenate((y_train, y), axis=0)
-            case 5:
-                x_val = x
-                y_val = y
-            case 6:
-                x_test = x
-                y_test = y
-
-    return (
-        x_train,
-        y_train,
-        x_val,
-        y_val,
-        x_test,
-        y_test,
-    )
-
-
 def get_park_datasets(
-    lookback: int, lookahead: int, features: dict = {}
+    lookback: int, lookahead: int, features: dict, folds: int | None
 ) -> tuple[
     torch.Tensor,
     torch.Tensor,
@@ -117,9 +139,11 @@ def get_park_datasets(
     x_test, y_test = [], []
     indicies = []
     combined_len = 0
+
+    # Loop over parks and create their data sets
     for i in range(1, 7):
         x_train_p, y_train_p, x_val_p, y_val_p, x_test_p, y_test_p = (
-            get_one_park_dataset(lookback, lookahead, i, features)
+            get_one_park_dataset(lookback, lookahead, i, features, folds)
         )
         x_train.extend(x_train_p)
         y_train.extend(y_train_p)
@@ -187,8 +211,6 @@ def apply_sliding_window(
     return np.array(x), np.array(y)
 
 
-# X_ss, y_mm = split_sequences(X_trans, y_trans, 100, 50)
-# print(X_ss.shape, y_mm.shape)
 def get_trefor_timeseries() -> np.ndarray:
     """Get processed trefor timeseries data as numpy array."""
     # Read trefor data csv
@@ -252,46 +274,4 @@ def get_timeseries_dataset(
         y_train.squeeze(1),
         y_val.squeeze(1),
         y_test.squeeze(1),
-    )
-
-
-def get_trefor_park_as_tensor(
-    timeseries: pd.DataFrame,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Get timeseries dataset as tensor.
-
-    Arguments:
-    ---------
-        timeseries: The time series data
-
-    """
-    x = []
-    y = []
-
-    time = timeseries.drop(["Dato", "Time"], axis=1).to_numpy()
-
-    # loop through each row in timeseries
-    for i in range(len(time)):
-        x_temp = []
-        y_temp = []
-        # add t-24 to t-1 to x, add t+0 to t+23 to y
-        for j in range(24):
-            x_temp.append([time[i][j]])
-            y_temp.append([time[i][24 + j]])
-
-        # append values to array
-        x.append(x_temp)
-        y.append(y_temp)
-
-    # convert list to numpy and float
-    x = np.array(x).astype(float)
-    y = np.array(y).astype(float)
-
-    # Create tensors of shape (len(x), 24, 1)
-    x_tensor = torch.tensor(data=x).float()
-    y_tensor = torch.tensor(data=y).float()
-
-    return (
-        x_tensor,
-        y_tensor.squeeze(1),
     )
