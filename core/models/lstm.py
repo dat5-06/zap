@@ -1,7 +1,11 @@
 import torch
 import torch.nn as nn
 import warnings
+from core.util.hyperparameter_configuration import get_hyperparameter_configuration
 
+# Initialization of global variables
+hyperparameter_configuration = get_hyperparameter_configuration()
+horizon = hyperparameter_configuration["horizon"]
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 
@@ -34,7 +38,7 @@ class LSTM(nn.Module):
         )
 
         self.relu = nn.LeakyReLU()
-        self.fc2 = nn.Linear(hidden_size, 24)
+        self.fc2 = nn.Linear(hidden_size, horizon)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         """Define the forward pass."""

@@ -1,7 +1,12 @@
 import torch
 import torch.nn as nn
 import warnings
+from core.util.hyperparameter_configuration import get_hyperparameter_configuration
 
+# Initialization of global variables
+hyperparameter_configuration = get_hyperparameter_configuration()
+lookback = hyperparameter_configuration["lookback"]
+horizon = hyperparameter_configuration["horizon"]
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 
@@ -29,7 +34,7 @@ class GRU(nn.Module):
             dropout=dropout_rate,
         )
         self.nl = nn.LeakyReLU()
-        self.fc = nn.Linear((hidden_size * 24), 24)
+        self.fc = nn.Linear((hidden_size * lookback), horizon)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         """Forward pass for the model."""
