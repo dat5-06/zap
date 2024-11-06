@@ -42,15 +42,14 @@ def train_model(
     loss_function: callable,
     training_loader: DataLoader,
     validation_loader: DataLoader,
+    learning_rate: float,
+    early_stopper: EarlyStop,
 ) -> tuple[list, list, nn.Module]:
     """Train a model."""
-    learning_rate = 0.001
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     best_v_loss = sys.maxsize
     best_model = None
-
-    early_stopper = EarlyStop(5, 0.05)
 
     train_loss = []
     val_loss = []
