@@ -2,11 +2,11 @@ from core.util.io import read_csv, write_csv, read_xlsx
 import pandas as pd
 import numpy as np
 
-capacities = [800, 2500, 2000, 800, 900, 1300, 700]
+capacities = [800, 2500, 2000, 800, 900, 1300]
 
 
 def park_preprocess_lin() -> None:
-    """Process public charginc station data."""
+    """Process public charging station data."""
     original = read_csv("interim/trefor_park.csv")
 
     for i, capacity in enumerate(capacities, 1):
