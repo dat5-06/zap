@@ -1,30 +1,24 @@
 import torch
 import torch.nn as nn
-import warnings
-from core.util.hyperparameter_configuration import get_hyperparameter_configuration
-
-# Initialization of global variables
-hyperparameter_configuration = get_hyperparameter_configuration()
-lookback = hyperparameter_configuration["lookback"]
-horizon = hyperparameter_configuration["horizon"]
-device = "cuda:0" if torch.cuda.is_available() else "cpu"
+from core.models.abstract_rnn import RNNBaseClass
 
 
-class GRU(nn.Module):
+class GRU(RNNBaseClass):
     """Simple GRU implementation."""
 
     def __init__(
-        self, input_size: int, hidden_size: int, num_layers: int, dropout_rate: float
+        self,
+        input_size: int,
+        hidden_size: int,
+        num_layers: int,
+        dropout_rate: float,
+        horizon: int,
+        lookback: int,
     ) -> None:
         """Initialize the GRU and its layers."""
-        super(GRU, self).__init__()
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.input_size = input_size
-        self.dropout_rate = dropout_rate
-
-        # Suppress user warning from dropout
-        warnings.filterwarnings("ignore")
+        super().__init__(
+            input_size, hidden_size, num_layers, dropout_rate, horizon, lookback
+        )
 
         self.gru = nn.GRU(
             input_size,
@@ -38,14 +32,10 @@ class GRU(nn.Module):
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         """Forward pass for the model."""
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device)
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device)
 
         out, _ = self.gru(x, h0)
         out = out.reshape(out.shape[0], -1)
         out = self.nl(out)
         out = self.fc(out)
         return out
-
-    def get_members(self) -> list:
-        """Get all members used to initialise the object."""
-        return [self.input_size, self.hidden_size, self.num_layers, self.dropout_rate]

@@ -1,15 +1,9 @@
 import torch
 import torch.nn as nn
-import warnings
-from core.util.hyperparameter_configuration import get_hyperparameter_configuration
-
-# Initialization of global variables
-hyperparameter_configuration = get_hyperparameter_configuration()
-horizon = hyperparameter_configuration["horizon"]
-device = "cuda:0" if torch.cuda.is_available() else "cpu"
+from core.models.abstract_rnn import RNNBaseClass
 
 
-class LSTM(nn.Module):
+class LSTM(RNNBaseClass):
     """LSTM model."""
 
     def __init__(
@@ -18,16 +12,13 @@ class LSTM(nn.Module):
         hidden_size: int,
         num_layers: int,
         dropout_rate: float,
+        horizon: int,
+        lookback: int,
     ) -> None:
         """Initialize the LSTM and its layers."""
-        super().__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.dropout_rate = dropout_rate
-
-        # Suppress user warning from dropout
-        warnings.filterwarnings("ignore")
+        super().__init__(
+            input_size, hidden_size, num_layers, dropout_rate, horizon, lookback
+        )
 
         self.lstm = nn.LSTM(
             input_size,
@@ -44,15 +35,11 @@ class LSTM(nn.Module):
         """Define the forward pass."""
         batch_size = x.size(0)
 
-        h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device)
-        c0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device)
+        h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device)
+        c0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device)
 
-        x, _ = self.lstm(x, (h0, c0))
-        x = self.relu(x)
-        x = self.fc2(x[:, -1, :])
+        out, _ = self.lstm(x, (h0, c0))
+        out = self.relu(out)
+        out = self.fc2(out[:, -1, :])
 
-        return x
-
-    def get_members(self) -> list:
-        """Get all members used to initialise the object."""
-        return [self.input_size, self.hidden_size, self.num_layers, self.dropout_rate]
+        return out
