@@ -5,7 +5,7 @@ from core.util.io import read_csv
 
 
 def get_one_park_dataset(
-    lookback: int, lookahead: int, park_number: int, features: dict, folds: int | None
+    lookback: int, horizon: int, park_number: int, features: dict, folds: int | None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Get normalized train-, val- and test datasets for Trefor parks."""
     park = read_csv(f"processed/park_{park_number}.csv")
@@ -16,7 +16,7 @@ def get_one_park_dataset(
     ]
     drop_columns.remove("Consumption")  # Ensure "consumption" column is not dropped
     park = park.drop(drop_columns, axis=1)
-    x, y = split_sequences(park.to_numpy(), park.to_numpy(), lookback, lookahead)
+    x, y = split_sequences(park.to_numpy(), park.to_numpy(), lookback, horizon)
 
     # Initialise empty arrays
     x_train, x_val, x_test = [], [], []
@@ -123,7 +123,7 @@ def get_one_norm_park(
 
 
 def get_park_datasets(
-    lookback: int, lookahead: int, features: dict, folds: int | None
+    lookback: int, horizon: int, folds: int | None, features: dict = {}
 ) -> tuple[
     torch.Tensor,
     torch.Tensor,
@@ -143,7 +143,7 @@ def get_park_datasets(
     # Loop over parks and create their data sets
     for i in range(1, 7):
         x_train_p, y_train_p, x_val_p, y_val_p, x_test_p, y_test_p = (
-            get_one_park_dataset(lookback, lookahead, i, features, folds)
+            get_one_park_dataset(lookback, horizon, i, features, folds)
         )
         x_train.extend(x_train_p)
         y_train.extend(y_train_p)
@@ -171,7 +171,7 @@ def get_park_datasets(
 
 
 def split_sequences(
-    features: np.ndarray, targets: np.ndarray, lookback: int, lookahead: int
+    features: np.ndarray, targets: np.ndarray, lookback: int, horizon: int
 ) -> tuple[np.ndarray, np.ndarray]:
     """Split a multivaritae sequence past, future samples."""
     x = []
@@ -179,7 +179,7 @@ def split_sequences(
     for i in range(len(features)):
         # Get the lookback / forward window
         lookback_index = i + lookback
-        fwd_index = lookback_index + lookahead
+        fwd_index = lookback_index + horizon
         # check if we are out of bounds
         if fwd_index > len(features):
             break
