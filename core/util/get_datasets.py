@@ -5,7 +5,7 @@ from core.util.io import read_csv
 
 
 def get_one_park_dataset(
-    lookback: int, lookahead: int, park_number: int, features: dict, folds: int | None
+    lookback: int, lookahead: int, park_number: int, features: dict, folds: bool
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Get normalized train-, val- and test datasets for Trefor parks."""
     park = read_csv(f"processed/park_{park_number}.csv")
@@ -23,8 +23,8 @@ def get_one_park_dataset(
     y_train, y_val, y_test = [], [], []
 
     # Check if the data should be cross validation
-    if folds is not None:
-        x_train, y_train, x_val, y_val, x_test, y_test = get_one_cross_park(x, y, folds)
+    if folds:
+        x_train, y_train, x_test, y_test = get_one_cross_park(x, y)
     else:
         x_train, y_train, x_val, y_val, x_test, y_test = get_one_norm_park(x, y)
 
@@ -39,50 +39,23 @@ def get_one_park_dataset(
 
 
 def get_one_cross_park(
-    x: np.ndarray, y: np.ndarray, folds_num: int
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    x: np.ndarray, y: np.ndarray
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Split the data for cross-validation."""
     # Create indexes for 80% training, 10% validation, and 10% testing
     split_test = int(len(x) * 0.9)
 
     # Split into temporary train and test sets
-    x_train_temp, y_train_temp, x_test, y_test = (
+    x_train_val, y_train_val, x_test, y_test = (
         x[:split_test],
         y[:split_test],
         x[split_test:],
         y[split_test:],
     )
 
-    # Define folds for cross-validation
-    fold_size = len(x_train_temp) // folds_num
-
-    folds = [
-        (
-            x_train_temp[i * fold_size : (i + 1) * fold_size],
-            y_train_temp[i * fold_size : (i + 1) * fold_size],
-        )
-        for i in range(folds_num)
-    ]
-
-    x_train, y_train, x_val, y_val = [], [], [], []
-
-    # Loop over folds and append the training and validation sets in each split
-    for i in range(folds_num):
-        x_val_fold, y_val_fold = folds[i]
-        x_val.append(x_val_fold)
-        y_val.append(y_val_fold)
-
-        x_train_fold = [folds[j][0] for j in range(folds_num) if j != i]
-        y_train_fold = [folds[j][1] for j in range(folds_num) if j != i]
-
-        x_train.append(np.concatenate(x_train_fold, axis=0))
-        y_train.append(np.concatenate(y_train_fold, axis=0))
-
     return (
-        np.concatenate(x_train, axis=0),
-        np.concatenate(y_train, axis=0),
-        np.concatenate(x_val, axis=0),
-        np.concatenate(y_val, axis=0),
+        x_train_val,
+        y_train_val,
         x_test,
         y_test,
     )
@@ -123,22 +96,19 @@ def get_one_norm_park(
 
 
 def get_park_datasets(
-    lookback: int, lookahead: int, features: dict, folds: int | None
+    lookback: int, lookahead: int, folds: bool, features: dict = {}
 ) -> tuple[
-    torch.Tensor,
-    torch.Tensor,
-    torch.Tensor,
-    torch.Tensor,
-    torch.Tensor,
-    torch.Tensor,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
     np.ndarray,
 ]:
     """Get concatenated normalized train-, val- and test datasets for Trefor parks."""
     x_train, y_train = [], []
     x_val, y_val = [], []
     x_test, y_test = [], []
-    indicies = []
-    combined_len = 0
 
     # Loop over parks and create their data sets
     for i in range(1, 7):
@@ -152,21 +122,13 @@ def get_park_datasets(
         x_test.extend(x_test_p)
         y_test.extend(y_test_p)
 
-        # Get indicies at which splits occur
-        split_1 = combined_len + len(x_train_p)
-        split_2 = split_1 + len(x_val_p)
-        indicies.append([split_1, split_2])
-
-        combined_len += len(x_train_p) + len(x_val_p) + len(x_test_p)
-
     return (
-        torch.Tensor(np.array(x_train)).float(),
-        torch.Tensor(np.array(y_train)).float(),
-        torch.Tensor(np.array(x_val)).float(),
-        torch.Tensor(np.array(y_val)).float(),
-        torch.Tensor(np.array(x_test)).float(),
-        torch.Tensor(np.array(y_test)).float(),
-        np.array(indicies),
+        np.array(x_train),
+        np.array(y_train),
+        np.array(x_val),
+        np.array(y_val),
+        np.array(x_test),
+        np.array(y_test),
     )
 
 
