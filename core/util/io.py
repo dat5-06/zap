@@ -16,6 +16,21 @@ def read_xlsx(file_path: str) -> pd.DataFrame:
     return pd.read_excel(path)
 
 
+def read_xlsx_sheet(file_path: str, sheet: str, index_col: int | None) -> pd.DataFrame:
+    """Read xlsx file to pandas dataframe.
+
+    Arguments:
+    ---------
+        file_path: Path to xlsx file relative to project root file to be read.
+        sheet: Name of the sheet in the excel file.
+        index_col: Determines if you want to flip the rows to columns
+
+    """
+    data_root = get_data_root()
+    path = data_root / file_path
+    return pd.read_excel(path, sheet, index_col=index_col)
+
+
 def read_csv(file_path: str) -> pd.DataFrame:
     """Read csv file to pandas dataframe.
 
