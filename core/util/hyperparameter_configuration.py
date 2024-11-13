@@ -11,6 +11,6 @@ def get_hyperparameter_configuration() -> (
     lookback = 36
     loss_function = zap_loss
     dropout_rate = 0.2
-    folds = 5
+    folds = 9
 
     return (hidden_size, epochs, horizon, lookback, loss_function, dropout_rate, folds)
