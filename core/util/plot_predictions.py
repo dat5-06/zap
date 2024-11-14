@@ -8,7 +8,7 @@ def plot_predictions(
     """Plot the model predictions and the actual values from startDay to endDay."""
     first_column_actual = y_test[start_day * 24].flatten().to("cpu")
     first_column_predicted = predicted[start_day * 24].flatten().to("cpu")
-    for i in range(start_day, end_day):
+    for i in range(start_day + 1, end_day):
         first_column_actual = torch.cat(
             (first_column_actual, y_test[i * 24].flatten().to("cpu"))
         )

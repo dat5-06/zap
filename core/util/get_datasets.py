@@ -6,11 +6,8 @@ from core.util.io import read_csv
 
 
 def get_one_park_dataset(
-    lookback: int,
-    horizon: int,
-    park_number: int,
-    features: dict,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    lookback: int, horizon: int, park_number: int, features: dict, folds: int
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[tuple[int, int]]]:
     """Get normalized train-, val- and test datasets for Trefor parks."""
     park = read_csv(f"processed/park_{park_number}.csv")
     drop_columns = [
@@ -22,13 +19,32 @@ def get_one_park_dataset(
     park = park.drop(drop_columns, axis=1)
     x, y = split_sequences(park.to_numpy(), park.to_numpy(), lookback, horizon)
 
+    x_train, y_train, x_test, y_test, indexes = get_one_cross_park(x, y, folds)
+
+    return (x_train, y_train, x_test, y_test, indexes)
+
+
+def get_one_cross_park(
+    x: np.ndarray, y: np.ndarray, folds_num: int
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[tuple[int, int]]]:
+    """Split the data for cross-validation into one array and split indices."""
+    # Create indexes for 80% training and 10% validation
     split_test = int(len(x) * 0.9)
-    return (
+    x_train_val, y_train_val, x_test, y_test = (
         x[:split_test],
         y[:split_test],
         x[split_test:],
         y[split_test:],
     )
+
+    # Define fold sizes
+    fold_size = len(x_train_val) // folds_num
+    fold_indices = [
+        (i * fold_size, min((i + 1) * fold_size, len(x_train_val)))
+        for i in range(folds_num)
+    ]
+
+    return x_train_val, y_train_val, x_test, y_test, fold_indices
 
 
 def split_sequences(
@@ -63,46 +79,40 @@ def cross_validation(
         np.ndarray,
     ]
 ]:
-    """Generate permitation for cross validation."""
-    indicies = []
-    x_train_vals, y_train_vals = [], []
+    """Generate permutations for cross-validation."""
+    x_trains, y_trains = [], []
     x_tests, y_tests = [], []
-    for i in range(1, 7):
-        x_train_val, y_train_val, x_test, y_test = get_one_park_dataset(
-            lookback, horizon, i, features
-        )
-        indicies.append(np.linspace(0, len(x_train_val), num=folds + 1, dtype=int))
+    all_fold_indices = []
 
-        x_train_vals.append(x_train_val)
-        y_train_vals.append(y_train_val)
+    # Iterate over parks
+    for i in range(1, 7):  # Assuming 5 parks
+        x_train_val, y_train_val, x_test, y_test, fold_indices = get_one_park_dataset(
+            lookback, horizon, i, features, folds=folds
+        )
+        x_trains.append(x_train_val)
+        y_trains.append(y_train_val)
         x_tests.append(x_test)
         y_tests.append(y_test)
-
-    test_indicies = np.array([len(x) for x in x_tests])
+        all_fold_indices.append(fold_indices)
 
     x_test = torch.tensor(np.concatenate(x_tests)).float()
     y_test = torch.tensor(np.concatenate(y_tests)).float()
 
-    # iterate the folds to yield
+    # For each fold
     for k in range(folds):
-        x_train, y_train = [], []
-        x_val, y_val = [], []
+        x_train, y_train, x_val, y_val = [], [], [], []
 
-        # the 6 parks
-        for i in range(6):
-            start = indicies[i][k]
-            end = indicies[i][k + 1]
+        for i in range(6):  # Assuming 5 parks
+            start, end = all_fold_indices[i][k]
+            split = int(start + ((end - start) * 0.9))
+            print(start, split, end)
+            # Training set includes only data before the validation block
+            x_train.append(x_trains[i][start:split])
+            y_train.append(y_trains[i][start:split])
 
-            # validation set is at index k
-            x_val.append(x_train_vals[i][start:end])
-            y_val.append(y_train_vals[i][start:end])
-
-            x_train.append(
-                np.concatenate([x_train_vals[i][:start], x_train_vals[i][end:]])
-            )
-            y_train.append(
-                np.concatenate([y_train_vals[i][:start], y_train_vals[i][end:]])
-            )
+            # Validation set is the block defined by the current fold
+            x_val.append(x_trains[i][split:end])
+            y_val.append(y_trains[i][split:end])
 
         yield (
             torch.tensor(np.concatenate(x_train)).float(),
@@ -111,5 +121,5 @@ def cross_validation(
             torch.tensor(np.concatenate(y_val)).float(),
             x_test,
             y_test,
-            test_indicies,
+            np.array([len(x) for x in x_tests]),  # Test indices
         )
