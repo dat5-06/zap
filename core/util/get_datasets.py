@@ -102,10 +102,10 @@ def cross_validation(
     for k in range(folds):
         x_train, y_train, x_val, y_val = [], [], [], []
 
-        for i in range(6):  # Assuming 5 parks
+        for i in range(6):
             start, end = all_fold_indices[i][k]
             split = int(start + ((end - start) * 0.9))
-            print(start, split, end)
+
             # Training set includes only data before the validation block
             x_train.append(x_trains[i][start:split])
             y_train.append(y_trains[i][start:split])
@@ -123,3 +123,20 @@ def cross_validation(
             y_test,
             np.array([len(x) for x in x_tests]),  # Test indices
         )
+
+
+def get_test_set(
+    lookback: int, horizon: int, folds: int, features: dict = {}
+) -> tuple[torch.tensor, torch.tensor]:
+    """Lazy solution to getting tests."""
+    x_tests, y_tests = [], []
+    for i in range(1, 7):  # Assuming 5 parks
+        _, _, x_test, y_test, _ = get_one_park_dataset(
+            lookback, horizon, i, features, folds=folds
+        )
+        x_tests.append(x_test)
+        y_tests.append(y_test)
+
+    x_test = torch.tensor(np.concatenate(x_tests)).float()
+    y_test = torch.tensor(np.concatenate(y_tests)).float()
+    return (x_test, y_test)
