@@ -121,6 +121,7 @@ def blocked_training(
     device: str,
     batch_size: int,
     early_stopper: EarlyStop,
+    features: dict = {},
 ) -> tuple[list, list, nn.Module]:
     """Train a model with blocked cross validation."""
     _, epochs, horizon, lookback, loss_function, _, folds = (
@@ -142,7 +143,9 @@ def blocked_training(
 
         # Iterate over the blocks
         for i, (x_train, y_train, x_val, y_val, _, _, _) in enumerate(
-            cross_validation(lookback=lookback, horizon=horizon, folds=folds)
+            cross_validation(
+                lookback=lookback, horizon=horizon, folds=folds, features=features
+            )
         ):
             # convert to dataset that can use dataloaders
             train_dataset = TreforData(x_train, y_train, device)
