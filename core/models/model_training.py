@@ -179,13 +179,13 @@ def blocked_training(
         avg_loss = avg_loss / blocks
         avg_v_loss = avg_v_loss / blocks
 
-        # Checks for early stop
-        if early_stopper.early_stop(avg_v_loss):
-            break
-
         # Appends average loss for training and validation
         train_loss.append(avg_loss)
         val_loss.append(avg_v_loss)
+
+        # Checks for early stop
+        if early_stopper.early_stop(avg_v_loss):
+            break
 
         # If this model has the lowest loss, we save its state for later reference
         if avg_v_loss < best_v_loss:
