@@ -75,3 +75,48 @@ def load_model(model_class: nn.Module, model_name: str, device: str) -> nn.Modul
     )
     model.to(device)
     return model
+
+
+def save_parameters(experiment: str, parameters: dict, overwrite: bool = False) -> None:
+    """Save parameters for use in experiments."""
+    model_path = get_project_root() / "core/models/saved_models"
+
+    param_file = pd.read_csv(model_path / "experiment_parameters.csv", sep=";")
+    index = -1
+
+    # Check if the experiment already exists and get its index if it does
+    if experiment in param_file.get("experiment").to_list():
+        if overwrite:
+            index = param_file.index[param_file["experiment"] == experiment][0]
+        else:
+            raise Exception("Can't overwrite an entry")
+
+    # Add the parameters and experiment to the file
+    param_file.loc[index, "experiment"] = experiment
+    for key, val in parameters.items():
+        param_file.loc[index, key] = val
+
+    # Write the new parameters to the file
+    param_file.to_csv(model_path / "experiment_parameters.csv", index=False, sep=";")
+
+
+def load_parameters(experiment: str) -> dict:
+    """Load in the parameters saved from grid search."""
+    model_path = get_project_root() / "core/models/saved_models"
+
+    param_file = pd.read_csv(model_path / "experiment_parameters.csv", sep=";")
+
+    if experiment not in param_file.get("experiment").to_list():
+        raise Exception("Experiment doesn't exist")
+
+    # Get the experiment's index and the CSV's headers
+    index = param_file.index[param_file["experiment"] == experiment][0]
+    columns = param_file.columns.to_list()
+    del columns[0]
+
+    # Insert the experiment's parameters in a dictionary
+    parameters = {}
+    for column in columns:
+        parameters[column] = param_file.loc[index, column].item()
+
+    return parameters
