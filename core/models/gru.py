@@ -28,6 +28,7 @@ class GRU(RNNBaseClass):
             dropout=dropout_rate,
         )
         self.nl = nn.LeakyReLU()
+        self.relu = nn.ReLU()
         self.fc = nn.Linear((hidden_size * lookback), horizon)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
@@ -38,4 +39,5 @@ class GRU(RNNBaseClass):
         out = out.reshape(out.shape[0], -1)
         out = self.nl(out)
         out = self.fc(out)
+        out = self.relu(out)
         return out
