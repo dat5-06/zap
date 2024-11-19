@@ -13,9 +13,9 @@ def get_one_park_dataset(
     drop_columns = [
         j
         for j in list(park.columns)
-        if features.get(j) is None or features.get(j) is False
+        if (features.get(j) is None or features.get(j) is False)
+        and j != "Consumption"  # ensure consumption is not dropped
     ]
-    drop_columns.remove("Consumption")  # Ensure "consumption" column is not dropped
     park = park.drop(drop_columns, axis=1)
     x, y = split_sequences(park.to_numpy(), park.to_numpy(), lookback, horizon)
 

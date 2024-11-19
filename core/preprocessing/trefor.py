@@ -29,6 +29,7 @@ def park_cleaning() -> None:
 
     # merge back together and save
     combined = pd.concat([original[["Dato", "Time"]], cleaned_data], axis=1)
+    combined = month_of_year(combined)
     combined = week_day(combined)
     combined = hour_of_day(combined)
     write_csv(combined, "interim/trefor_park.csv")
@@ -58,6 +59,15 @@ def park_preprocess() -> None:
         write_csv(park_renamed, f"processed/park_{park_num}.csv")
 
     print("Processed Trefor park data")
+
+
+def month_of_year(df: pd.DataFrame) -> pd.DataFrame:
+    """Add a column with the weekday of the date."""
+    df["Dato"] = pd.to_datetime(df["Dato"], format="%d-%m-%Y")
+    df["Month"] = df["Dato"].dt.month / 12
+    df["Month_x"] = np.sin(2 * np.pi * df.Month)
+    df["Month_y"] = np.cos(2 * np.pi * df.Month)
+    return df
 
 
 def week_day(df: pd.DataFrame) -> pd.DataFrame:
