@@ -7,12 +7,12 @@ def get_hyperparameter_configuration() -> (
 ):
     """Get tuple of our hyperparameter configuration."""
     hidden_size = 16
-    epochs = 100
+    epochs = 200
     horizon = 24
     loss_function = zap_loss
     dropout_rate = 0.2
     folds = 9
-    early_stopper = EarlyStop(5, 0.00)
+    early_stopper = EarlyStop(10, 0.005)
 
     return (
         hidden_size,

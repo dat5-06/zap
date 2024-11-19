@@ -4,13 +4,27 @@ import pandas as pd
 from core.util.io import get_project_root
 
 
-def save_model(model: nn.Module, model_name: str, overwrite: bool = False) -> None:
+def save_model(
+    model: nn.Module,
+    model_name: str,
+    train_loss: list,
+    val_loss: list,
+    mae: float,
+    rmse: float,
+    smape: float,
+    overwrite: bool = False,
+) -> None:
     """Save a model's parameters for later use.
 
     Arguments:
     ---------
         model (nn.Module): model that should be saved
         model_name (str): name of the file without filetype
+        train_loss (list): list of training losses
+        val_loss (list): list of validation losses
+        mae (float): mean absolute error of the model
+        rmse (float): root mean squared error of the model
+        smape (float): symmetric mean absolute percentage error of the model
         overwrite (bool): if the entry should be overwritten if it already exists
 
     """
@@ -34,6 +48,11 @@ def save_model(model: nn.Module, model_name: str, overwrite: bool = False) -> No
     # Add or change row of the model
     arg_file.loc[index, "Model name"] = model_name
     arg_file.loc[index, "Parameters"] = " ".join(constructor_arguments)
+    arg_file.loc[index, "MAE"] = mae
+    arg_file.loc[index, "RMSE"] = rmse
+    arg_file.loc[index, "sMAPE"] = smape
+    arg_file.loc[index, "Train_loss"] = " ".join([str(i) for i in train_loss])
+    arg_file.loc[index, "Val_loss"] = " ".join([str(i) for i in val_loss])
     arg_file.to_csv(model_path / "constructor_args.csv", index=False, sep=";")
 
     # Save the model as a file
