@@ -20,7 +20,7 @@ def train_one_epoch(
     """Train one epoch."""
     running_loss = 0.0
 
-    for i, (inputs, target) in enumerate(training_loader):
+    for inputs, target in training_loader:
         # Reset the gradients
         optimizer.zero_grad()
 
@@ -58,7 +58,7 @@ def train_model(
     train_loss = []
     val_loss = []
 
-    for epoch in tqdm(range(epochs), desc="Iterating epochs"):
+    for _ in tqdm(range(epochs), desc="Iterating epochs"):
         # Make sure gradient tracking is on, and do a pass over the data
         model.train()
         avg_loss = train_one_epoch(model, optimizer, loss_function, training_loader)
@@ -71,7 +71,7 @@ def train_model(
         # Disable gradient computation and reduce memory consumption
         with torch.no_grad():
             running_v_loss = 0.0
-            for i, (v_inputs, v_target) in enumerate(validation_loader):
+            for v_inputs, v_target in validation_loader:
                 v_predictions = model(v_inputs)
                 v_target = v_target.squeeze(-1)
                 running_v_loss += loss_function(v_predictions, v_target).item()
@@ -104,7 +104,7 @@ def test_model(
     t_loss = 0
 
     with torch.no_grad():
-        for i, t_data in enumerate(testing_loader):
+        for t_data in testing_loader:
             t_inputs, t_target = t_data
             t_predictions = best_model(t_inputs)
             predicted.append(t_predictions)
@@ -134,17 +134,15 @@ def blocked_training(
     train_loss = []
     val_loss = []
 
-    for epoch in tqdm(range(epochs), desc="Iterating epochs"):
+    for _ in tqdm(range(epochs), desc="Iterating epochs"):
         # Initialize variables to keep track of block data
         avg_loss = 0
         avg_v_loss = 0
         blocks = 0
 
         # Iterate over the blocks
-        for i, (x_train, y_train, x_val, y_val, _, _, _) in enumerate(
-            cross_validation(
-                lookback=lookback, horizon=horizon, folds=folds, features=features
-            )
+        for x_train, y_train, x_val, y_val, _, _, _ in cross_validation(
+            lookback=lookback, horizon=horizon, folds=folds, features=features
         ):
             # convert to dataset that can use dataloaders
             train_dataset = TreforData(x_train, y_train, device)
@@ -168,7 +166,7 @@ def blocked_training(
             model.eval()
             with torch.no_grad():
                 running_v_loss = 0.0
-                for i, (v_inputs, v_target) in enumerate(validation_loader):
+                for v_inputs, v_target in validation_loader:
                     v_predictions = model(v_inputs)
                     v_target = v_target.squeeze(-1)
                     running_v_loss += loss_function(v_predictions, v_target).item()
