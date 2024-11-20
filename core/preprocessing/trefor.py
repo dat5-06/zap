@@ -49,6 +49,8 @@ def park_preprocess() -> None:
                     "Hour_y",
                     "Day_x",
                     "Day_y",
+                    "Month_x",
+                    "Month_y",
                     f"Ladepark {park_num}",
                 ]
             ].dropna()
