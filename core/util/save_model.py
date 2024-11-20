@@ -96,7 +96,9 @@ def load_model(model_class: nn.Module, model_name: str, device: str) -> nn.Modul
     return model
 
 
-def save_parameters(experiment: str, parameters: dict, overwrite: bool = False) -> None:
+def save_parameters(
+    experiment: str, parameters: dict, loss: float, overwrite: bool = False
+) -> None:
     """Save parameters for use in experiments."""
     model_path = get_project_root() / "core/models/saved_models"
 
@@ -112,6 +114,7 @@ def save_parameters(experiment: str, parameters: dict, overwrite: bool = False) 
 
     # Add the parameters and experiment to the file
     param_file.loc[index, "experiment"] = experiment
+    param_file.loc[index, "loss"] = loss
     for key, val in parameters.items():
         param_file.loc[index, key] = val
 
@@ -132,6 +135,7 @@ def load_parameters(experiment: str) -> dict:
     index = param_file.index[param_file["experiment"] == experiment][0]
     columns = param_file.columns.to_list()
     del columns[0]
+    del columns[4]
 
     # Insert the experiment's parameters in a dictionary
     parameters = {}
