@@ -134,8 +134,8 @@ def load_parameters(experiment: str) -> dict:
     # Get the experiment's index and the CSV's headers
     index = param_file.index[param_file["experiment"] == experiment][0]
     columns = param_file.columns.to_list()
-    del columns[0]
-    del columns[4]
+    del columns[columns.index("experiment")]
+    del columns[columns.index("loss")]
 
     # Insert the experiment's parameters in a dictionary
     parameters = {}

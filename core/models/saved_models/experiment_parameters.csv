@@ -1,5 +1,1 @@
-experiment;learning_rate;batch_size;lookback;num_layers
-00_GRU_trefor_park;0.001;32.0;48.0;1.0
-1_GRU_trefor_park;0.001;128.0;96.0;2.0
-01_GRU_trefor_park;0.001;64.0;96.0;2.0
-01_LSTM_trefor_park;0.001;128.0;96.0;1.0
+experiment;learning_rate;batch_size;lookback;num_layers;seed;loss
