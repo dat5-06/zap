@@ -125,7 +125,12 @@ def blocked_training(
     features: dict = {},
 ) -> tuple[list, list, nn.Module]:
     """Train a model with blocked cross validation."""
-    _, epochs, horizon, loss_function, _, folds, _ = get_hyperparameter_configuration()
+    parameters = get_hyperparameter_configuration()
+    epochs = parameters["epochs"]
+    horizon = parameters["horizon"]
+    loss_function = parameters["loss_function"]
+    folds = parameters["folds"]
+
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     best_v_loss = float("inf")
