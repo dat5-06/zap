@@ -118,6 +118,10 @@ def save_parameters(
     for key, val in parameters.items():
         param_file.loc[index, key] = val
 
+    param_file[["batch_size", "lookback", "num_layers", "seed", "loss"]] = param_file[
+        ["batch_size", "lookback", "num_layers", "seed", "loss"]
+    ].astype(int)
+
     # Write the new parameters to the file
     param_file.to_csv(model_path / "experiment_parameters.csv", index=False, sep=";")
 

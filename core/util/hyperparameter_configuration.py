@@ -2,24 +2,15 @@ from core.util.loss_functions import zap_loss
 from core.util.early_stop import EarlyStop
 
 
-def get_hyperparameter_configuration() -> (
-    tuple[int, int, int, callable, float, int, EarlyStop]
-):
-    """Get tuple of our hyperparameter configuration."""
-    hidden_size = 16
-    epochs = 200
-    horizon = 24
-    loss_function = zap_loss
-    dropout_rate = 0.2
-    folds = 9
-    early_stopper = EarlyStop(10, 0.005)
-
-    return (
-        hidden_size,
-        epochs,
-        horizon,
-        loss_function,
-        dropout_rate,
-        folds,
-        early_stopper,
-    )
+def get_hyperparameter_configuration() -> dict:
+    """Get dictionary of our hyperparameter configuration."""
+    hyperparameters = {
+        "hidden_size": 16,
+        "epochs": 200,
+        "horizon": 24,
+        "loss_function": zap_loss,
+        "dropout_rate": 0.2,
+        "folds": 9,
+        "early_stopper": EarlyStop(10, 0.005),
+    }
+    return hyperparameters
