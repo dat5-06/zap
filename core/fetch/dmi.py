@@ -28,7 +28,7 @@ def _fetch_stations() -> None:
     stations = set([station["properties"]["stationId"] for station in data["features"]])
 
     base_url = "https://dmigw.govcloud.dk/v2/metObs/collections/observation/items"
-    datetime = "2022-01-01T00:00:00Z/2024-01-01T00:00:00Z"
+    datetime = "2022-01-01T00:00:00Z/2024-10-01T00:00:00Z"
     limit = "200000"
 
     usable_stations = []
