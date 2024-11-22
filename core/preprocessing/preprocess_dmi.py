@@ -33,8 +33,9 @@ def dmi_split_weathertype() -> None:
 
     for weather_type in weather_types:
         if weather_type in original.columns:
-            weather_type_data = original[weather_type] / 100  # Normalize to /100
-            # Combine date, time, and normalized weather type
+            weather_type_data = original[
+                weather_type
+            ]  # Combine date, time, and normalized weather type
             combined = pd.concat([date, time, weather_type_data], axis=1)
             combined.columns = ["Date", "Time", weather_type]
             write_csv(combined, f"processed/dmi_{weather_type}.csv")
