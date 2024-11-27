@@ -67,7 +67,6 @@ def cross_validation(
         torch.Tensor,
         torch.Tensor,
         torch.Tensor,
-        np.ndarray,
     ]
 ]:
     """Generate permutations for cross-validation."""
@@ -76,21 +75,22 @@ def cross_validation(
     # Iterate over parks
     for i in range(1, 7):
         park = get_one_park_dataset(i, features)
+        print(park)
         parks.append(park)
 
     x_train, y_train, x_val, y_val, x_test, y_test = [], [], [], [], [], []
 
-    simon_length = 0
+    max_length = 0
     for p in parks:
-        if len(p) > simon_length:
-            simon_length = len(p)
+        if len(p) > max_length:
+            max_length = len(p)
 
     # For each fold
     train_days *= 24
     val_days *= 24
     test_days *= 24
     diff = train_days + val_days + test_days
-    length = simon_length // diff
+    length = max_length // diff
 
     for i in range(length - 1):
         for j in range(6):
@@ -137,5 +137,4 @@ def cross_validation(
         torch.tensor(np.concatenate(y_val)).float(),
         torch.tensor(np.concatenate(x_test)).float(),
         torch.tensor(np.concatenate(y_test)).float(),
-        np.array([len(x) for x in x_test]),  # Test indices
     )

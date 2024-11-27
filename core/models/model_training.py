@@ -1,12 +1,9 @@
 import torch
 import copy
-import sys
 from tqdm.notebook import tqdm
 from torch.utils.data import DataLoader
 import torch.nn as nn
 from core.util.early_stop import EarlyStop
-
-from core.util.hyperparameter_configuration import get_hyperparameter_configuration
 
 
 def train_one_epoch(
@@ -39,7 +36,9 @@ def train_one_epoch(
 
 
 def train_model(
+    epochs: int,
     model: nn.Module,
+    loss_function: callable,
     training_loader: DataLoader,
     validation_loader: DataLoader,
     learning_rate: float,
@@ -48,11 +47,7 @@ def train_model(
     """Train a model."""
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    _, epochs, horizon, loss_function, _, train_days, val_days, test_days, _ = (
-        get_hyperparameter_configuration()
-    )
-
-    best_v_loss = sys.maxsize
+    best_v_loss = float("inf")
     best_model = None
 
     train_loss = []
