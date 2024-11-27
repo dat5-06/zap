@@ -75,7 +75,6 @@ def cross_validation(
     # Iterate over parks
     for i in range(1, 7):
         park = get_one_park_dataset(i, features)
-        print(park)
         parks.append(park)
 
     x_train, y_train, x_val, y_val, x_test, y_test = [], [], [], [], [], []
