@@ -1,14 +1,9 @@
 import torch
 import copy
-import sys
 from tqdm.notebook import tqdm
 from torch.utils.data import DataLoader
 import torch.nn as nn
 from core.util.early_stop import EarlyStop
-
-from core.util.get_datasets import cross_validation
-from core.util.trefor_dataset import TreforData
-from core.util.hyperparameter_configuration import get_hyperparameter_configuration
 
 
 def train_one_epoch(
@@ -52,7 +47,7 @@ def train_model(
     """Train a model."""
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    best_v_loss = sys.maxsize
+    best_v_loss = float("inf")
     best_model = None
 
     train_loss = []
@@ -113,85 +108,3 @@ def test_model(
     predicted = torch.cat(predicted, dim=0)
     t_loss /= len(testing_loader)
     return (t_loss, predicted)
-
-
-def blocked_training(
-    model: nn.Module,
-    learning_rate: float,
-    device: str,
-    batch_size: int,
-    early_stopper: EarlyStop,
-    lookback: int,
-    features: dict = {},
-) -> tuple[list, list, nn.Module]:
-    """Train a model with blocked cross validation."""
-    parameters = get_hyperparameter_configuration()
-    epochs = parameters["epochs"]
-    horizon = parameters["horizon"]
-    loss_function = parameters["loss_function"]
-    folds = parameters["folds"]
-
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-    best_v_loss = float("inf")
-    best_model = None
-
-    train_loss = []
-    val_loss = []
-
-    for _ in tqdm(range(epochs), desc="Iterating epochs"):
-        # Initialize variables to keep track of block data
-        avg_loss = 0
-        avg_v_loss = 0
-        blocks = 0
-
-        # Iterate over the blocks
-        for x_train, y_train, x_val, y_val, _, _, _ in cross_validation(
-            lookback=lookback, horizon=horizon, folds=folds, features=features
-        ):
-            # convert to dataset that can use dataloaders
-            train_dataset = TreforData(x_train, y_train, device)
-            val_dataset = TreforData(x_val, y_val, device)
-
-            # initialize the dataloaders, without shuffeling the data between epochs
-            training_loader = DataLoader(
-                train_dataset, batch_size=batch_size, shuffle=False
-            )
-            validation_loader = DataLoader(
-                val_dataset, batch_size=batch_size, shuffle=False
-            )
-
-            # Train model on block
-            model.train()
-            avg_loss += train_one_epoch(
-                model, optimizer, loss_function, training_loader
-            )
-
-            # Validate model on block
-            model.eval()
-            with torch.no_grad():
-                running_v_loss = 0.0
-                for v_inputs, v_target in validation_loader:
-                    v_predictions = model(v_inputs)
-                    v_target = v_target.squeeze(-1)
-                    running_v_loss += loss_function(v_predictions, v_target).item()
-
-            avg_v_loss += running_v_loss / len(validation_loader)
-            blocks += 1
-
-        avg_loss = avg_loss / blocks
-        avg_v_loss = avg_v_loss / blocks
-
-        # Appends average loss for training and validation
-        train_loss.append(avg_loss)
-        val_loss.append(avg_v_loss)
-
-        # Checks for early stop
-        if early_stopper.early_stop(avg_v_loss):
-            break
-
-        # If this model has the lowest loss, we save its state for later reference
-        if avg_v_loss < best_v_loss:
-            best_v_loss = avg_v_loss
-            best_model = copy.deepcopy(model)
-    return (train_loss, val_loss, best_model)
