@@ -75,8 +75,8 @@ def _fetch_wcodes(force: bool = False) -> None:
     print("Fetching weather codes from DMI")
 
     base_url = "https://dmigw.govcloud.dk/v2/metObs/collections/observation/items"
-    datetime = "2022-01-01T00:00:00Z/2024-01-01T00:00:00Z"
-    limit = "18000"
+    datetime = "2022-01-01T00:00:00Z/2024-11-01T00:00:00Z"
+    limit = "25000"
     station = "06104"
 
     # Parameters

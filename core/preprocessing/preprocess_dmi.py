@@ -10,8 +10,6 @@ def remove_timeformatting() -> None:
     original["Date"] = original["observed"].str.split("T").str[0]
     time = original["observed"].str.split("T").str[1]
 
-    # Reformat 'Date' from YYYY-MM-DD to DD-MM-YYYY
-    original["Date"] = original["Date"]
     # Clean 'Time': remove trailing "00Z" and adjust leading zeros
     time = time.str.replace("Z", "", regex=False)
     # Set 'Time' in original
@@ -25,7 +23,7 @@ def remove_timeformatting() -> None:
 
 
 def dmi_split_weathertype() -> None:
-    """Split the weather type column into multiple columns and normalize the data."""
+    """Split DMI data into separate files based on weather type."""
     weather_types = ["wind", "rain", "humidity", "temp"]
     original = read_csv("interim/interim_dmi.csv")
     date = original["Date"]
