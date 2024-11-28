@@ -88,17 +88,17 @@ def cross_validation(
     train_days *= 24
     val_days *= 24
     test_days *= 24
-    diff = train_days + val_days + test_days
+    diff = train_days + val_days + test_days + lookback + (24 * 3)
     length = max_length // diff
 
     for i in range(length - 1):
         for j in range(6):
             train_start = i * length
-            train_end = train_start + train_days
-            val_start = train_end
-            val_end = val_start + val_days
-            test_start = val_end
-            test_end = test_start + test_days
+            train_end = train_start + train_days + lookback + 24
+            val_start = train_end - lookback
+            val_end = train_end + val_days + 24
+            test_start = val_end - lookback
+            test_end = val_end + test_days + 24
 
             if len(parks[j]) < test_end:
                 continue
