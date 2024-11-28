@@ -10,9 +10,9 @@ def get_hyperparameter_configuration() -> dict:
         "horizon": 24,
         "loss_function": zap_loss,
         "dropout_rate": 0.2,
-        "train_days": 224,
-        "val_days": 28,
-        "test_days": 28,
+        "train_days": 48,
+        "val_days": 6,
+        "test_days": 6,
         "early_stopper": EarlyStop(10, 0.005),
     }
     return hyperparameters
