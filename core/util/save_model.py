@@ -85,7 +85,11 @@ def load_model(model_class: nn.Module, model_name: str, device: str) -> nn.Modul
 
     # Convert elements to integers
     for i in range(len(parameters)):
-        parameters[i] = int(parameters[i])
+        # Handle that dropout is a float
+        if i == 3:
+            parameters[i] = float(parameters[i])
+        else:
+            parameters[i] = int(parameters[i])
 
     # Initiate and load the model
     model = model_class(*parameters)
