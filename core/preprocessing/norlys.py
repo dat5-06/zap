@@ -35,8 +35,8 @@ def norlys_add_features() -> None:
         original_cons=original_cons, original_pub=original_pub
     )
 
-    cons_copy = week_day(cons_copy)
-    pub_copy = week_day(pub_copy)
+    cons_copy = add_seasonality(cons_copy)
+    pub_copy = add_seasonality(pub_copy)
 
     write_csv(cons_copy, "processed/norlys/norlys_cons.csv")
     write_csv(pub_copy, "processed/norlys/norlys_pub.csv")
@@ -84,13 +84,17 @@ def get_index_csv(original: pd.DataFrame, index_dict: pd.DataFrame) -> pd.DataFr
     return copy
 
 
-def week_day(df: pd.DataFrame) -> pd.DataFrame:
+def add_seasonality(df: pd.DataFrame) -> pd.DataFrame:
     """Add a column with the weekday of the date."""
     df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
     df["weekday"] = df["date"].dt.dayofweek / 7
     df["day_x"] = np.sin(2 * np.pi * df.weekday)
     df["day_y"] = np.cos(2 * np.pi * df.weekday)
-    return df
+    df["month"] = df["date"].dt.month / 12
+    df["month_x"] = np.sin(2 * np.pi * df.month)
+    df["month_y"] = np.cos(2 * np.pi * df.month)
+    data = df[[c for c in df if c not in ["kwh_percentage"]] + ["kwh_percentage"]]
+    return data
 
 
 if __name__ == "__main__":
