@@ -1,4 +1,3 @@
-from typing import Iterator
 import torch
 import numpy as np
 
@@ -58,16 +57,15 @@ def cross_validation(
     train_days: int,
     val_days: int,
     test_days: int,
+    block_gap: int = 0,
     features: dict = {},
-) -> Iterator[
-    tuple[
-        torch.Tensor,
-        torch.Tensor,
-        torch.Tensor,
-        torch.Tensor,
-        torch.Tensor,
-        torch.Tensor,
-    ]
+) -> tuple[
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
 ]:
     """Generate permutations for cross-validation."""
     parks = []
@@ -88,17 +86,19 @@ def cross_validation(
     train_days *= 24
     val_days *= 24
     test_days *= 24
-    block_length = train_days + val_days + test_days + lookback + (24 * 3)
+    block_length = (
+        train_days + val_days + test_days + lookback + (block_gap * 3) + (24 * 3)
+    )
     num_blocks = max_length // block_length
 
     for i in range(num_blocks - 1):
         for j in range(6):
-            train_start = i * num_blocks
+            train_start = i * block_length if i == 0 else i * block_length + block_gap
             train_end = train_start + train_days + lookback + 24
-            val_start = train_end - lookback
-            val_end = train_end + val_days + 24
-            test_start = val_end - lookback
-            test_end = val_end + test_days + 24
+            val_start = train_end + block_gap
+            val_end = train_end + val_days + lookback + 24
+            test_start = val_end + block_gap
+            test_end = val_end + test_days + lookback + 24
 
             if len(parks[j]) < test_end:
                 continue

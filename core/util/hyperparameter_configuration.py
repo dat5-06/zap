@@ -14,6 +14,7 @@ def get_hyperparameter_configuration() -> dict:
         "train_days": int(days * 0.8),
         "val_days": int(days * 0.1),
         "test_days": int(days * 0.1),
+        "blocked_gap": 24,
         "early_stopper": EarlyStop(10, 0.005),
     }
     return hyperparameters
