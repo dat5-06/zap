@@ -76,7 +76,7 @@ def cross_validation(
     block_length = train_length + val_length + test_length
 
     # calculate the amount of blocks that fit into the dataset of a single park
-    biggest_park_size = max(parks, key=len)
+    biggest_park_size = max(len(park) for park in parks)
     num_blocks = biggest_park_size // block_length
 
     # iterate the blocks
