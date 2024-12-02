@@ -8,43 +8,33 @@ def get_one_park_dataset(park_number: int, features: dict) -> np.ndarray:
     """Get normalized train-, val- and test datasets for Trefor parks."""
     park = read_csv(f"processed/park_{park_number}.csv")
     drop_columns = [
-        j
-        for j in list(park.columns)
-        if (features.get(j) is None or features.get(j) is False)
-        and j != "Consumption"  # ensure consumption is not dropped
+        col
+        for col in list(park.columns)
+        if (features.get(col) is None or features.get(col) is False)
+        and col != "Consumption"  # ensure consumption is not dropped
     ]
     park = park.drop(drop_columns, axis=1)
 
     return park.to_numpy()
 
 
-def get_one_cross_park(x: np.ndarray, folds_num: int) -> list[tuple[int, int]]:
-    """Split the data for cross-validation into one array and split indices."""
-    # Define fold sizes
-    fold_size = len(x) // folds_num
-    fold_indices = [
-        (i * fold_size, min((i + 1) * fold_size, len(x))) for i in range(folds_num)
-    ]
-
-    return fold_indices
-
-
 def split_sequences(
-    features: np.ndarray, lookback: int, horizon: int
+    sequence: np.ndarray, lookback: int, horizon: int
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Split a multivaritae sequence past, future samples."""
+    """Apply sliding window on a sequence of data, given a lookback and horizon."""
     x = []
     y = []
-    for i in range(len(features)):
-        # Get the lookback / forward window
+    # iterate the sequence to give `len(sequence) - lookback - horizon` sized output
+    for i in range(len(sequence) - lookback - horizon):
+        # get the lookback index
         lookback_index = i + lookback
+        # get horizon index
         fwd_index = lookback_index + horizon
-        # check if we are out of bounds
-        if fwd_index > len(features):
-            break
+
+        # x is all the features, and y is only the consumption (last column)
         seq_x, seq_y = (
-            features[i:lookback_index],
-            features[lookback_index:fwd_index, -1],
+            sequence[i:lookback_index],
+            sequence[lookback_index:fwd_index, -1],
         )
         x.append(seq_x)
         y.append(seq_y)
@@ -67,54 +57,58 @@ def cross_validation(
     torch.Tensor,
     torch.Tensor,
 ]:
-    """Generate permutations for cross-validation."""
-    parks = []
-
-    # Iterate over parks
-    for i in range(1, 7):
-        park = get_one_park_dataset(i, features)
-        parks.append(park)
+    """Divide dataset into training, validation and test sets using some block size."""
+    parks = [get_one_park_dataset(i, features) for i in range(1, 7)]  # park 1 through 6
 
     x_train, y_train, x_val, y_val, x_test, y_test = [], [], [], [], [], []
 
-    max_length = 0
-    for p in parks:
-        if len(p) > max_length:
-            max_length = len(p)
+    # We change from days to hours
+    train_size = train_days * 24
+    val_size = val_days * 24
+    test_size = test_days * 24
 
-    # For each fold
-    train_days *= 24
-    val_days *= 24
-    test_days *= 24
-    block_length = (
-        train_days + val_days + test_days + lookback + (block_gap * 3) + (24 * 3)
-    )
-    num_blocks = max_length // block_length
+    # For each block we add padding for the training, validation and test
+    # This is equal to the lookback + horizon + block_gap
+    train_length = train_size + lookback + horizon + block_gap
+    val_length = val_size + lookback + horizon + block_gap
+    test_length = test_size + lookback + horizon + block_gap
 
-    for i in range(num_blocks - 1):
-        for j in range(6):
-            train_start = i * block_length if i == 0 else i * block_length + block_gap
-            train_end = train_start + train_days + lookback + 24
-            val_start = train_end + block_gap
-            val_end = train_end + val_days + lookback + 24
-            test_start = val_end + block_gap
-            test_end = val_end + test_days + lookback + 24
+    block_length = train_length + val_length + test_length
 
-            if len(parks[j]) < test_end:
+    # calculate the amount of blocks that fit into the dataset of a single park
+    biggest_park_size = max(parks, key=len)
+    num_blocks = biggest_park_size // block_length
+
+    # iterate the blocks
+    for block_num in range(num_blocks):
+        # The indicies are the same for all parks
+        train_start = block_num * block_length
+        train_end = train_start + train_size + lookback + horizon
+
+        val_start = train_end + block_gap
+        val_end = train_end + val_size + lookback + horizon
+
+        test_start = val_end + block_gap
+        test_end = val_end + test_size + lookback + horizon
+
+        # now we can iterate the parks
+        for park_index in range(6):
+            # the parks are not equal in length, so maybe there is no more data left
+            # if that is the case, we skip it
+            if len(parks[park_index]) < test_end:
                 continue
 
-            # Training set includes only data before the validation block
+            # Now, we can apply sliding window on the data and use it
             x_train_split, y_train_split = split_sequences(
-                parks[j][train_start:train_end],
+                parks[park_index][train_start:train_end],
                 lookback=lookback,
                 horizon=horizon,
             )
             x_train.append(x_train_split)
             y_train.append(y_train_split)
 
-            # Validation set is the block defined by the current fold
             x_val_split, y_val_split = split_sequences(
-                parks[j][val_start:val_end],
+                parks[park_index][val_start:val_end],
                 lookback=lookback,
                 horizon=horizon,
             )
@@ -122,13 +116,14 @@ def cross_validation(
             y_val.append(y_val_split)
 
             x_test_split, y_test_split = split_sequences(
-                parks[j][test_start:test_end],
+                parks[park_index][test_start:test_end],
                 lookback=lookback,
                 horizon=horizon,
             )
             x_test.append(x_test_split)
             y_test.append(y_test_split)
 
+    # Join the sequences of blocks into one big blob of data (block)
     return (
         torch.tensor(np.concatenate(x_train)).float(),
         torch.tensor(np.concatenate(y_train)).float(),

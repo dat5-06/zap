@@ -27,9 +27,7 @@ class GRU(RNNBaseClass):
             batch_first=True,
             dropout=dropout_rate,
         )
-        self.nl = nn.LeakyReLU()
-        self.relu = nn.ReLU()
-        self.fc = nn.Linear((hidden_size * lookback), horizon)
+        self.fully_connected = nn.Linear((hidden_size * lookback), horizon)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         """Forward pass for the model."""
@@ -37,7 +35,5 @@ class GRU(RNNBaseClass):
 
         out, _ = self.gru(x, h0)
         out = out.reshape(out.shape[0], -1)
-        out = self.nl(out)
-        out = self.fc(out)
-        out = self.relu(out)
+        out = self.fully_connected(out)
         return out

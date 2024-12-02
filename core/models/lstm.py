@@ -28,9 +28,7 @@ class LSTM(RNNBaseClass):
             dropout=dropout_rate,
         )
 
-        self.leakyrelu = nn.LeakyReLU()
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(hidden_size, horizon)
+        self.fully_connected = nn.Linear(hidden_size, horizon)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         """Define the forward pass."""
@@ -40,7 +38,5 @@ class LSTM(RNNBaseClass):
         c0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device)
 
         out, _ = self.lstm(x, (h0, c0))
-        out = self.relu(out)
-        out = self.fc2(out[:, -1, :])
-        out = self.leakyrelu(out)
+        out = self.fully_connected(out[:, -1, :])
         return out
