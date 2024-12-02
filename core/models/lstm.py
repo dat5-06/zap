@@ -40,7 +40,5 @@ class LSTM(RNNBaseClass):
         c0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device)
 
         out, _ = self.lstm(x, (h0, c0))
-        out = self.relu(out)
         out = self.fc2(out[:, -1, :])
-        out = self.leakyrelu(out)
         return out

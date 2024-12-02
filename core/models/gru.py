@@ -37,7 +37,5 @@ class GRU(RNNBaseClass):
 
         out, _ = self.gru(x, h0)
         out = out.reshape(out.shape[0], -1)
-        out = self.nl(out)
         out = self.fc(out)
-        out = self.relu(out)
         return out
