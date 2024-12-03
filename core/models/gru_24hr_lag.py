@@ -3,7 +3,7 @@ import torch.nn as nn
 from core.models.abstract_rnn import RNNBaseClass
 
 
-class GRU(RNNBaseClass):
+class GRU24hrLag(RNNBaseClass):
     """Simple GRU implementation."""
 
     def __init__(
@@ -27,13 +27,23 @@ class GRU(RNNBaseClass):
             batch_first=True,
             dropout=dropout_rate,
         )
-        self.fully_connected = nn.Linear(hidden_size, horizon)
+        self.fc = nn.Linear(hidden_size + 24, horizon)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         """Forward pass for the model."""
+        # x has shape (batch_size, lookback, input_size)
+        # We want to get the consumption for the last 24 hours
+        # -24 is the last 24 hours and -1 is the consumption column
+        lag = x[:, -24:, -1].squeeze()
+
         h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device)
 
         out, _ = self.gru(x, h0)
-        out = out[:, -1, :]
-        out = self.fully_connected(out)
+        # The out tensor has the output of each cell in the GRU
+        # It has shape (batch_size, lookback/GRU_memory_cells, hidden_size)
+        out = out[:, -1, :]  # We only want output of the last LSTM memory cell
+
+        # After the GRU layer, the output is concatenated with the 24hr lag
+        out = torch.cat((out, lag), dim=1)
+        out = self.fc(out)
         return out
