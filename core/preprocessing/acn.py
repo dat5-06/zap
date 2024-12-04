@@ -2,6 +2,7 @@ import pandas as pd
 from core.util.io import get_data_root, write_csv
 from datetime import datetime, timedelta
 from core.preprocessing.trefor import month_of_year, week_day, hour_of_day
+from tqdm import tqdm
 
 
 def acn() -> None:
@@ -64,17 +65,17 @@ def process_ev_data() -> None:
         ev_session_df["disconnectTime"], format="%a, %d %b %Y %H:%M:%S GMT"
     )
 
-    # Generate hourly timesteps from Dec 1, 2018 00:00 to Jan 1, 2019 00:00
+    # Generate hourly timesteps from Jan 1, 2019 00:00 to Dec 31, 2019 00:00
     # This is the test period they used in the paper
-    timestep_start = datetime(2018, 12, 1, 0, 0)
-    timestep_end = datetime(2019, 1, 1, 0, 0)
+    timestep_start = datetime(2019, 1, 1, 0, 0)
+    timestep_end = datetime(2019, 12, 31, 0, 0)
     timesteps = pd.date_range(timestep_start, timestep_end, freq="h")
 
     # Initialize a list to store results
     results = []
 
     # Iterate over each timestep
-    for timestep in timesteps:
+    for timestep in tqdm(timesteps):
         timestep_start = timestep
         timestep_end = timestep + timedelta(hours=1)
 
@@ -129,7 +130,15 @@ def process_ev_data() -> None:
         ]
     ]
 
-    # Write the output to a CSV file
+    # Write the output to a CSV file, dont know if works but wont test 30 min no no.
+    caltech_to_trefor_results_df["Consumption"] = (
+        caltech_to_trefor_results_df["Consumption"]
+        - caltech_to_trefor_results_df["Consumption"].min()
+    ) / (
+        caltech_to_trefor_results_df["Consumption"].max()
+        - caltech_to_trefor_results_df["Consumption"].min()
+    )
+
     write_csv(caltech_to_trefor_results_df, output_filename)
     print(f"Processed data saved to {output_filename}")
 

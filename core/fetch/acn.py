@@ -29,8 +29,8 @@ def fetch_acn(force: bool = False) -> None:
     base_url = "https://ev.caltech.edu/api/v1/sessions/caltech"
     params = {
         "where": (
-            'connectionTime>="Wed, 1 May 2019 00:00:00 GMT" and '
-            'connectionTime<="Thu, 2 May 2024 00:00:00 GMT"'
+            'connectionTime>="Wed, 1 Jan 2019 00:00:00 GMT" and '
+            'connectionTime<="Thu, 31 Dec 2019 00:00:00 GMT"'
         ),
         "page": 1,
     }
