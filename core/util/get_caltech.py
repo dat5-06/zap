@@ -36,7 +36,7 @@ def caltech_cross_validation(
     torch.Tensor,
 ]:
     """Divide dataset into training, validation and test sets using some block size."""
-    parks = [get_caltech_dataset(features)]
+    park = get_caltech_dataset(features)
 
     x_train, y_train, x_val, y_val, x_test, y_test = [], [], [], [], [], []
 
@@ -53,9 +53,8 @@ def caltech_cross_validation(
 
     block_length = train_length + val_length + test_length
 
-    # calculate the amount of blocks that fit into the dataset of a single park
-    biggest_park_size = max(len(park) for park in parks)
-    num_blocks = biggest_park_size // block_length
+    # calculate the amount of blocks that fit into the dataset
+    num_blocks = len(park) // block_length
 
     # iterate the blocks
     for block_num in range(num_blocks):
@@ -73,7 +72,7 @@ def caltech_cross_validation(
 
         # Now, we can apply sliding window on the data and use it
         x_train_split, y_train_split = split_sequences(
-            parks[0][train_start:train_end],
+            park[train_start:train_end],
             lookback=lookback,
             horizon=horizon,
         )
@@ -81,7 +80,7 @@ def caltech_cross_validation(
         y_train.append(y_train_split)
 
         x_val_split, y_val_split = split_sequences(
-            parks[0][val_start:val_end],
+            park[val_start:val_end],
             lookback=lookback,
             horizon=horizon,
         )
@@ -89,7 +88,7 @@ def caltech_cross_validation(
         y_val.append(y_val_split)
 
         x_test_split, y_test_split = split_sequences(
-            parks[0][test_start:test_end],
+            park[test_start:test_end],
             lookback=lookback,
             horizon=horizon,
         )
