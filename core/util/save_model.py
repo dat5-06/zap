@@ -93,8 +93,11 @@ def load_model(model_class: nn.Module, model_name: str, device: str) -> nn.Modul
 
     # Initiate and load the model
     model = model_class(*parameters)
+
     model.load_state_dict(
-        torch.load(model_path / f"{model_name}.pt", weights_only=False)
+        torch.load(
+            model_path / f"{model_name}.pt", weights_only=False, map_location=device
+        ),
     )
     model.to(device)
     return model
