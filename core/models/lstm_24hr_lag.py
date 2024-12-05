@@ -29,6 +29,7 @@ class LSTM24hrLag(RNNBaseClass):
         )
 
         self.fc = nn.Linear(hidden_size + 24, horizon)
+        self.dropout = nn.Dropout(p=0.2)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         """Define the forward pass."""
@@ -48,5 +49,6 @@ class LSTM24hrLag(RNNBaseClass):
 
         # After the LSTM layer, the output is concatenated with the 24hr lag
         out = torch.cat((out, lag), dim=1)
+        out = self.dropout(out)
         out = self.fc(out)
         return out

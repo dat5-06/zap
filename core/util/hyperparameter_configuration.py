@@ -7,7 +7,7 @@ def get_hyperparameter_configuration() -> dict:
     days = 20
     hyperparameters = {
         "hidden_size": 16,
-        "epochs": 200,
+        "epochs": 125,
         "horizon": 24,
         "loss_function": zap_loss,
         "dropout_rate": 0.2,

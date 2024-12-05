@@ -23,16 +23,16 @@ class CNNLSTM(RNNBaseClass):
         self.cnn = nn.Sequential(
             nn.Conv1d(
                 in_channels=input_size,
-                out_channels=64,
-                kernel_size=2,
+                out_channels=128,
+                kernel_size=1,
                 stride=1,
                 padding="valid",
             ),
             nn.ReLU(),
             nn.Conv1d(
-                in_channels=64,
+                in_channels=128,
                 out_channels=128,
-                kernel_size=2,
+                kernel_size=1,
                 stride=1,
                 padding="valid",
             ),
@@ -47,6 +47,7 @@ class CNNLSTM(RNNBaseClass):
             dropout=dropout_rate,
         )
         self.fc_lstm = nn.Linear(hidden_size, horizon)
+        self.dropout = nn.Dropout(p=0.2)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         """Define the forward pass."""
@@ -61,11 +62,18 @@ class CNNLSTM(RNNBaseClass):
         batch_size = x.size(0)
         h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device)
         c0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device)
-        x_lstm, _ = self.lstm(
+
+        out, _ = self.lstm(
             x_cnn, (h0, c0)
         )  # (batch_size, reduced_lookback, hidden_size)
 
+        # The out tensor has the output of each memory cell in the LSTM
+        # It has shape (batch_size, lookback/LSTM_memory_cells, hidden_size)
+        out = out[:, -1, :]  # We only want output of the last LSTM memory cell
+
+        out = self.dropout(out)  # (batch_size, 100)
+
         # Fully connected layers
-        out = self.fc_lstm(x_lstm[:, -1, :])  # (batch_size, 100)
+        out = self.fc_lstm(out)  # (batch_size, 100)
 
         return out
