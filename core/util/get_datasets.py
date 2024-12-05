@@ -47,7 +47,6 @@ def cross_validation(
     train_days: int,
     val_days: int,
     test_days: int,
-    block_gap: int = 0,
     features: dict = {},
 ) -> tuple[
     torch.Tensor,
@@ -68,11 +67,11 @@ def cross_validation(
     test_size = test_days * 24
 
     # For each block we add padding for the training, validation and test
-    # This is equal to the lookback + horizon + block_gap
-    train_length = train_size + lookback + horizon + block_gap
-    val_length = val_size + lookback + horizon + block_gap
-    test_length = test_size + lookback + horizon + block_gap
-
+    # This is equal to the lookback + horizon
+    lookback_shift = 96 - lookback
+    train_length = train_size + lookback + horizon + lookback_shift
+    val_length = val_size + lookback + horizon + lookback_shift
+    test_length = test_size + lookback + horizon + lookback_shift
     block_length = train_length + val_length + test_length
 
     # calculate the amount of blocks that fit into the dataset of a single park
@@ -82,14 +81,14 @@ def cross_validation(
     # iterate the blocks
     for block_num in range(num_blocks):
         # The indicies are the same for all parks
-        train_start = block_num * block_length
+        train_start = block_num * block_length + lookback_shift
         train_end = train_start + train_size + lookback + horizon
 
-        val_start = train_end + block_gap
-        val_end = train_end + val_size + lookback + horizon
+        val_start = train_end + lookback_shift
+        val_end = val_start + val_size + lookback + horizon
 
-        test_start = val_end + block_gap
-        test_end = val_end + test_size + lookback + horizon
+        test_start = val_end + lookback_shift
+        test_end = test_start + test_size + lookback + horizon
 
         # now we can iterate the parks
         for park_index in range(6):
