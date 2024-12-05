@@ -29,6 +29,7 @@ class LSTM(RNNBaseClass):
         )
 
         self.fully_connected = nn.Linear(hidden_size, horizon)
+        self.dropout = nn.Dropout(p=0.2)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         """Define the forward pass."""
@@ -38,5 +39,7 @@ class LSTM(RNNBaseClass):
         c0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device)
 
         out, _ = self.lstm(x, (h0, c0))
-        out = self.fully_connected(out[:, -1, :])
+        out = out[:, -1, :]
+        out = self.dropout(out)
+        out = self.fully_connected(out)
         return out

@@ -28,6 +28,7 @@ class GRU(RNNBaseClass):
             dropout=dropout_rate,
         )
         self.fully_connected = nn.Linear(hidden_size, horizon)
+        self.dropout = nn.Dropout(p=0.2)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         """Forward pass for the model."""
@@ -35,5 +36,6 @@ class GRU(RNNBaseClass):
 
         out, _ = self.gru(x, h0)
         out = out[:, -1, :]
+        out = self.dropout(out)
         out = self.fully_connected(out)
         return out

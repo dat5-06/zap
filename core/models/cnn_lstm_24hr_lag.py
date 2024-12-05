@@ -47,6 +47,7 @@ class CNNLSTM24hrLag(RNNBaseClass):
             dropout=dropout_rate,
         )
         self.fc = nn.Linear((hidden_size + 24), horizon)
+        self.dropout = nn.Dropout(p=0.2)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         """Define the forward pass."""
@@ -59,13 +60,14 @@ class CNNLSTM24hrLag(RNNBaseClass):
         x_cnn = x.permute(0, 2, 1)  # (batch_size, input_size, lookback)
         x_cnn = self.cnn(x_cnn)  # (batch_size, 64, reduced_lookback)
 
+        # Flatten for LSTM
+        x_cnn = x_cnn.permute(0, 2, 1)  # (batch_size, reduced_lookback, 64)
+
         # Initialize cell state and hidden state
         batch_size = x.size(0)
         h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device)
         c0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device)
 
-        # Flatten for LSTM
-        x_cnn = x_cnn.permute(0, 2, 1)  # (batch_size, reduced_lookback, 64)
         out, _ = self.lstm(
             x_cnn, (h0, c0)
         )  # (batch_size, reduced_lookback, hidden_size)
@@ -76,6 +78,9 @@ class CNNLSTM24hrLag(RNNBaseClass):
 
         # After the LSTM layer, the output is concatenated with the 24hr lag
         out = torch.cat((out, lag), dim=1)
+
+        # Add dropout
+        out = self.dropout(out)  # (batch_size, 100)
 
         # Fully connected layers
         x = self.fc(out)  # (batch_size, 100)
