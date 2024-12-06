@@ -1,30 +1,24 @@
 import torch
-from scipy import stats
+import numpy as np
 
 
-def _24hlnbe(
-    loss_function: callable,
-    y_test: torch.Tensor,
-    model_loss: float,
-    n_lag: int = 24,
-) -> float:
-    """Calculate the percentage loss of the 24 hour lag naive baseline."""
-    return loss_function(y_test[:-n_lag], y_test[n_lag:]) / model_loss
+def naive(x_test: torch.Tensor) -> torch.Tensor:
+    """Linear regression over the lookback window of 96."""
+    # x-values for naive baseline regression
+    # naive baseline is always 96 lookback window
+    x = np.arange(96) - 96
+
+    # iterate testset
+    naive_prediction = []
+    for item in x_test:
+        # check the entire lookback window, but only get the consumption
+        coef = np.polyfit(x, item[:, -1], 1)
+        regression_fn = np.poly1d(coef)
+        naive_prediction.append(regression_fn(np.arange(24)))
+
+    return torch.tensor(np.array(naive_prediction))
 
 
-def nbe(
-    loss_function: callable,
-    y_test: torch.Tensor,
-    x_test: torch.Tensor,
-    model_loss: float,
-) -> float:
-    """Find percentage difference between naive model loss and the inputted loss."""
-    slope, intercept, _, _, _ = stats.linregress(x_test.flatten(), x_test.flatten())
-
-    def regression(x: torch.tensor) -> torch.tensor:
-        """Make a function for the regression."""
-        for i in range(len(x)):
-            x[i] = slope * x[i] + intercept
-        return x
-
-    return loss_function(y_test, regression(x_test)) / model_loss
+def _24hlag(x_test: torch.Tensor) -> torch.Tensor:
+    """Naive baseline predicting output to be equal to the last 24 hours."""
+    return x_test[:, -24:, -1]
