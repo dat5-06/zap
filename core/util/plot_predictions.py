@@ -27,7 +27,8 @@ def plot_predictions(
 def plot_every_model(
     start_day: int,
     end_day: int,
-    y_test: list,
+    y_test: torch.Tensor,
+    predicted_naive: np.ndarray,
     predicted_lstm: torch.Tensor,
     predicted_gru: torch.Tensor,
     predicted_cnn_lstm: torch.Tensor,
@@ -40,12 +41,14 @@ def plot_every_model(
         return d * 24 + hour_offset
 
     ground_truth = y_test[index(start_day)].flatten().to("cpu")
+    naive = predicted_naive[index(start_day)].flatten()
     lstm = predicted_lstm[index(start_day)].flatten().to("cpu")
     gru = predicted_gru[index(start_day)].flatten().to("cpu")
     cnn_lstm = predicted_cnn_lstm[index(start_day)].flatten().to("cpu")
 
     for i in range(start_day + 1, end_day):
         ground_truth = torch.cat((ground_truth, y_test[index(i)].flatten().to("cpu")))
+        naive = np.concatenate((naive, predicted_naive[index(i)].flatten()))
         lstm = torch.cat((lstm, predicted_lstm[index(i)].flatten().to("cpu")))
         gru = torch.cat((gru, predicted_gru[index(i)].flatten().to("cpu")))
         cnn_lstm = torch.cat(
@@ -55,6 +58,7 @@ def plot_every_model(
     x = np.arange((end_day - start_day) * 24) + hour_offset
 
     plt.plot(x, ground_truth, label="Ground Truth")
+    plt.plot(x, naive, label="Naive Baseline")
     plt.plot(x, lstm, label="LSTM", linewidth=1)
     plt.plot(x, gru, label="GRU", linewidth=1)
     plt.plot(x, cnn_lstm, label="CNN-LSTM", linewidth=1)
