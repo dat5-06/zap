@@ -24,3 +24,12 @@ def smape(y: list, y_hat: list) -> float:
         if abs(y[i]) + abs(y_hat[i]) != 0:
             sum_tracker += abs(y[i] - y_hat[i]) / ((abs(y[i]) + abs(y_hat[i])) / 2)
     return (100 / len(y)) * sum_tracker
+
+
+def adjusted_smape(y: list, y_hat: list, margin: float = 0.05) -> float:
+    """Calculate sMAPE on all values in y that are above margin."""
+    indicies = [i for i, pred in enumerate(y) if pred > margin]
+    y_above_threshold = [y[i] for i in indicies]
+    hat_above_threshold = [y_hat[i] for i in indicies]
+
+    return smape(y_above_threshold, hat_above_threshold)
