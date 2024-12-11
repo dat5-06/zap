@@ -125,8 +125,8 @@ def save_parameters(
     for key, val in parameters.items():
         param_file.loc[index, key] = val
 
-    param_file[["batch_size", "lookback", "num_layers", "seed"]] = param_file[
-        ["batch_size", "lookback", "num_layers", "seed"]
+    param_file[["batch_size", "lookback", "num_layers"]] = param_file[
+        ["batch_size", "lookback", "num_layers"]
     ].astype(int)
 
     # Write the new parameters to the file
@@ -147,6 +147,7 @@ def load_parameters(experiment: str) -> dict:
     columns = param_file.columns.to_list()
     del columns[columns.index("experiment")]
     del columns[columns.index("loss")]
+    del columns[columns.index("seed")]
 
     # Insert the experiment's parameters in a dictionary
     parameters = {}
