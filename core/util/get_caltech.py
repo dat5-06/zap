@@ -19,7 +19,7 @@ def get_caltech_dataset(features: dict) -> np.ndarray:
     return park.to_numpy()
 
 
-def caltech_cross_validation(
+def caltech_split_data(
     lookback: int,
     horizon: int,
     train_days: int,
