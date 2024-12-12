@@ -49,6 +49,7 @@ def split_data(
     val_days: int,
     test_days: int,
     features: dict = {},
+    park_nums: list = [range(1, 7)],
 ) -> tuple[
     torch.Tensor,
     torch.Tensor,
@@ -58,7 +59,7 @@ def split_data(
     torch.Tensor,
 ]:
     """Divide dataset into training, validation and test sets using some block size."""
-    parks = [get_one_park_dataset(i, features) for i in range(1, 7)]  # park 1 through 6
+    parks = [get_one_park_dataset(i, features) for i in park_nums]  # park 1 through 6
 
     x_train, y_train, x_val, y_val, x_test, y_test = [], [], [], [], [], []
 
@@ -92,7 +93,7 @@ def split_data(
         test_end = test_start + test_size + lookback + horizon
 
         # now we can iterate the parks
-        for park_index in range(6):
+        for park_index in range(len(park_nums)):
             # the parks are not equal in length, so maybe there is no more data left
             # if that is the case, we skip it
             if len(parks[park_index]) < test_end:
@@ -140,13 +141,14 @@ def denormalize_data(
     val_days: int = 2,
     test_days: int = 2,
     horizon: int = 24,
+    park_nums: list = [range(1, 7)],
 ) -> torch.Tensor:
     """Denormalize the input dataset."""
     assert len(y_test) % (24 * test_days) == 0
 
     y_test = np.array(y_test)
 
-    parks = [get_one_park_dataset(i, {}) for i in range(1, 7)]  # park 1 through 6
+    parks = [get_one_park_dataset(i, {}) for i in park_nums]  # park 1 through 6
 
     # we do not need the intermediate variables from the function above
     block_length = (train_days + val_days + test_days) * 24 + (96 + horizon) * 3
