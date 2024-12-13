@@ -104,7 +104,7 @@ def load_model(model_class: nn.Module, model_name: str, device: str) -> nn.Modul
 
 
 def save_parameters(
-    experiment: str, parameters: dict, loss: float, overwrite: bool = False
+    experiment: str, parameters: dict, loss: float, overwrite: bool = True
 ) -> None:
     """Save parameters for use in experiments."""
     model_path = get_project_root() / "core/models/saved_models"
