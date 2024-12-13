@@ -49,7 +49,7 @@ def split_data(
     val_days: int,
     test_days: int,
     features: dict = {},
-    park_nums: list = [range(1, 7)],
+    park_nums: list = [*range(1, 7)],
 ) -> tuple[
     torch.Tensor,
     torch.Tensor,
@@ -141,7 +141,7 @@ def denormalize_data(
     val_days: int = 2,
     test_days: int = 2,
     horizon: int = 24,
-    park_nums: list = [range(1, 7)],
+    park_nums: list = [*range(1, 7)],
 ) -> torch.Tensor:
     """Denormalize the input dataset."""
     assert len(y_test) % (24 * test_days) == 0
