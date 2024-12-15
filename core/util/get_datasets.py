@@ -1,8 +1,124 @@
 import torch
 import numpy as np
+import pandas as pd
 
 from core.util.io import read_csv
 from core.preprocessing.trefor import capacities
+
+
+def normalize_caltech(data: pd.DataFrame) -> pd.DataFrame:
+    """Normalize Caltech EV consumption data."""
+    data["Consumption"] = (data["Consumption"] - data["Consumption"].min()) / (
+        data["Consumption"].max() - data["Consumption"].min()
+    )
+    return data
+
+
+def denormalize_caltech(
+    data: torch.Tensor | np.ndarray | list, original_min: float, original_max: float
+) -> torch.Tensor:
+    """Denormalize Caltech EV consumption data."""
+    return data * (original_max - original_min) + original_min
+
+
+def get_caltech(features: dict) -> np.ndarray:
+    """Get normalized train-, val- and test datasets for Caltech."""
+    caltech = read_csv("processed/caltech_ev_sessions.csv")
+    caltech = normalize_caltech(caltech)
+    drop_columns = [
+        col
+        for col in list(caltech.columns)
+        if (features.get(col) is None or features.get(col) is False)
+        and col != "Consumption"  # ensure consumption is not dropped
+    ]
+    caltech = caltech.drop(drop_columns, axis=1)
+
+    return caltech.to_numpy()
+
+
+def split_caltech_data(
+    lookback: int,
+    horizon: int,
+    train_days: int,
+    val_days: int,
+    test_days: int,
+    features: dict = {},
+) -> tuple[
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+]:
+    """Divide dataset into training, validation and test sets using some block size."""
+    caltech = get_caltech(features)
+
+    x_train, y_train, x_val, y_val, x_test, y_test = [], [], [], [], [], []
+
+    # We change from days to hours
+    train_size = train_days * 24
+    val_size = val_days * 24
+    test_size = test_days * 24
+
+    # For each block we add padding for the training, validation and test
+    # This is equal to the lookback + horizon
+    lookback_shift = 96 - lookback
+    train_length = train_size + lookback + horizon + lookback_shift
+    val_length = val_size + lookback + horizon + lookback_shift
+    test_length = test_size + lookback + horizon + lookback_shift
+    block_length = train_length + val_length + test_length
+
+    # calculate the amount of blocks that fit into the dataset of a single park
+    caltech_size = len(caltech)
+    num_blocks = caltech_size // block_length
+
+    # iterate the blocks
+    for block_num in range(num_blocks):
+        # calculate the start and end indices for the training, validation and test sets
+        train_start = block_num * block_length + lookback_shift
+        train_end = train_start + train_size + lookback + horizon
+
+        val_start = train_end + lookback_shift
+        val_end = val_start + val_size + lookback + horizon
+
+        test_start = val_end + lookback_shift
+        test_end = test_start + test_size + lookback + horizon
+
+        # apply sliding window on the data and append it to the respective sets
+        x_train_split, y_train_split = split_sequences(
+            caltech[train_start:train_end],
+            lookback=lookback,
+            horizon=horizon,
+        )
+        x_train.append(x_train_split)
+        y_train.append(y_train_split)
+
+        x_val_split, y_val_split = split_sequences(
+            caltech[val_start:val_end],
+            lookback=lookback,
+            horizon=horizon,
+        )
+        x_val.append(x_val_split)
+        y_val.append(y_val_split)
+
+        x_test_split, y_test_split = split_sequences(
+            caltech[test_start:test_end],
+            lookback=lookback,
+            horizon=horizon,
+        )
+        x_test.append(x_test_split)
+        y_test.append(y_test_split)
+
+    # Join the sequences of blocks into one big blob of data (block)
+    return (
+        torch.tensor(np.concatenate(x_train)).float(),
+        torch.tensor(np.concatenate(y_train)).float(),
+        torch.tensor(np.concatenate(x_val)).float(),
+        torch.tensor(np.concatenate(y_val)).float(),
+        torch.tensor(np.concatenate(x_test)).float(),
+        torch.tensor(np.concatenate(y_test)).float(),
+    )
 
 
 def get_one_park_dataset(park_number: int, features: dict) -> np.ndarray:
