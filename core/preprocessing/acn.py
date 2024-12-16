@@ -66,7 +66,6 @@ def process_ev_data() -> None:
     )
 
     # Generate hourly timesteps from Jan 1, 2019 00:00 to Dec 31, 2019 00:00
-    # This is the test period they used in the paper
     timestep_start = datetime(2019, 1, 1, 0, 0)
     timestep_end = datetime(2019, 12, 31, 0, 0)
     timesteps = pd.date_range(timestep_start, timestep_end, freq="h")
@@ -84,8 +83,12 @@ def process_ev_data() -> None:
 
         # Iterate over each session
         for _, row in ev_session_df.iterrows():
-            session_start = row["connectionTime"]
-            session_end = row["disconnectTime"]
+            session_start = row["connectionTime"] - timedelta(
+                hours=8
+            )  # covert from GMT to PST
+            session_end = row["disconnectTime"] - timedelta(
+                hours=8
+            )  # covert from GMT to PST
             kwh = float(row["kWhDelivered"].replace(",", "."))
 
             # Calculate the overlap between the session and the current timestep
@@ -129,15 +132,6 @@ def process_ev_data() -> None:
             "Consumption",
         ]
     ]
-
-    # Write the output to a CSV file, dont know if works but wont test 30 min no no.
-    caltech_to_trefor_results_df["Consumption"] = (
-        caltech_to_trefor_results_df["Consumption"]
-        - caltech_to_trefor_results_df["Consumption"].min()
-    ) / (
-        caltech_to_trefor_results_df["Consumption"].max()
-        - caltech_to_trefor_results_df["Consumption"].min()
-    )
 
     write_csv(caltech_to_trefor_results_df, output_filename)
     print(f"Processed data saved to {output_filename}")

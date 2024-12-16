@@ -5,6 +5,14 @@ import numpy as np
 capacities = [800, 2500, 2000, 800, 900, 1300]
 
 
+def print_mean_consumption_per_park() -> None:
+    """Print the mean consumption per park."""
+    original = read_csv("interim/trefor_park.csv")
+    for i in range(1, 7):
+        park = original[f"Ladepark {i}"]
+        print(f"Park {i}: {park.mean()} kWh")
+
+
 def park_preprocess_lin() -> None:
     """Process public charging station data."""
     original = read_csv("interim/trefor_park.csv")
@@ -92,6 +100,7 @@ def hour_of_day(df: pd.DataFrame, format_str: str) -> pd.DataFrame:
 
 def trefor() -> None:
     """Preprocess all Trefor data."""
+    print_mean_consumption_per_park()
     park_cleaning()
     park_preprocess_lin()
     park_preprocess()
