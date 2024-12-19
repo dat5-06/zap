@@ -66,8 +66,8 @@ def process_ev_data() -> None:
     )
 
     # Generate hourly timesteps from Jan 1, 2019 00:00 to Dec 31, 2019 00:00
-    timestep_start = datetime(2019, 1, 1, 0, 0)
-    timestep_end = datetime(2019, 12, 31, 0, 0)
+    timestep_start = datetime(2018, 4, 25, 11, 0)
+    timestep_end = datetime(2021, 9, 14, 4, 0)
     timesteps = pd.date_range(timestep_start, timestep_end, freq="h")
 
     # Initialize a list to store results
