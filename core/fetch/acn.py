@@ -29,14 +29,14 @@ def fetch_acn(force: bool = False) -> None:
     base_url = "https://ev.caltech.edu/api/v1/sessions/caltech"
     params = {
         "where": (
-            'connectionTime>="Wed, 1 Jan 2019 00:00:00 GMT" and '
-            'connectionTime<="Thu, 31 Dec 2019 00:00:00 GMT"'
+            'connectionTime>="Wed, 1 Jan 2015 00:00:00 GMT" and '
+            'connectionTime<="Thu, 10 Dec 2024 00:00:00 GMT"'
         ),
         "page": 1,
     }
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {ACN_API_KEY}",
+        "Authorization": f"Bearer b1pkX7JrolrALd-UyWSR3-TvwL678PwHgs-zpy3_gLA",
     }
 
     initial_req = requests.get(base_url, params=params, headers=headers, timeout=10)

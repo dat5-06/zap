@@ -17,3 +17,6 @@ experiment;learning_rate;batch_size;lookback;num_layers;seed;loss
 04_GRU_trefor_park;0.001;32;96;2;;0.0568826885893941
 04_CNN_LSTM_trefor_park;0.001;128;36;2;;0.0580086563713848
 04_LSTM_trefor_park;0.003;32;96;1;;0.0561573212552401
+05_GRU_trefor_park;0.001;128;36;1;;0.0008346892973349
+05_LSTM_trefor_park;0.003;128;96;2;;0.0008021321894678
+05_CNN_LSTM_trefor_park;0.003;128;96;2;;0.0007955968903843
